@@ -1,0 +1,50 @@
+import * as transactionsService from "./transactions.service.js";
+
+export async function create(req, res, next) {
+  try {
+    const transaction = await transactionsService.createTransaction(req.userId, req.body);
+    res.status(201).json(transaction);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function list(req, res, next) {
+  try {
+    const transactions = await transactionsService.listTransactions(req.userId);
+    res.status(200).json(transactions);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getOne(req, res, next) {
+  try {
+    const transaction = await transactionsService.getTransactionById(req.userId, req.params.id);
+    res.status(200).json(transaction);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function update(req, res, next) {
+  try {
+    const transaction = await transactionsService.updateTransaction(
+      req.userId,
+      req.params.id,
+      req.body
+    );
+    res.status(200).json(transaction);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function remove(req, res, next) {
+  try {
+    await transactionsService.deleteTransaction(req.userId, req.params.id);
+    res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+}
