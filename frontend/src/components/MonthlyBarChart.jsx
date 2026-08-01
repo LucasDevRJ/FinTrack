@@ -9,12 +9,7 @@ import {
   YAxis,
 } from "recharts";
 import { formatCurrency } from "../utils/currency.js";
-
-// Validated categorical slots 1 (blue) and 2 (orange) — passes CVD and
-// normal-vision contrast checks for this two-series pairing (see the
-// dataviz skill). Fixed order: income always slot 1, expense always slot 2.
-const INCOME_COLOR = "#2a78d6";
-const EXPENSE_COLOR = "#eb6834";
+import { EXPENSE_COLOR, INCOME_COLOR } from "../utils/transactionColors.js";
 
 const GRIDLINE_COLOR = "#e1e0d9";
 const AXIS_COLOR = "#c3c2b7";
