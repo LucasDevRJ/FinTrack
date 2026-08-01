@@ -18,6 +18,15 @@ export async function list(req, res, next) {
   }
 }
 
+export async function summary(req, res, next) {
+  try {
+    const data = await transactionsService.getSummary(req.userId);
+    res.status(200).json(data);
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function getOne(req, res, next) {
   try {
     const transaction = await transactionsService.getTransactionById(req.userId, req.params.id);

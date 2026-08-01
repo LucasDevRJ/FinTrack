@@ -16,6 +16,9 @@ router.use(protect);
 
 router.post("/", validate(createTransactionSchema), transactionsController.create);
 router.get("/", transactionsController.list);
+// Must come before "/:id" — otherwise Express would match "summary" as the
+// :id param, and idParamSchema would reject it as an invalid UUID.
+router.get("/summary", transactionsController.summary);
 router.get("/:id", validate(idParamSchema, "params"), transactionsController.getOne);
 router.patch(
   "/:id",

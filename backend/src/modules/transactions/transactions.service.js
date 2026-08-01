@@ -47,3 +47,78 @@ export async function deleteTransaction(userId, id) {
   await findOwnedTransaction(userId, id);
   await prisma.transaction.delete({ where: { id } });
 }
+
+const MONTHS_IN_SUMMARY = 6;
+
+// `date` fields are calendar dates ("2026-08-01") coerced by zod into a Date
+// at UTC midnight, and Postgres stores that exact UTC instant. Reading it
+// back with local getters (getMonth/getFullYear) would re-interpret that
+// instant in the server's timezone — in UTC-3 (Brazil), midnight UTC on the
+// 1st becomes 9pm on the last day of the *previous* month, silently
+// shifting every 1st-of-the-month transaction into the wrong bucket. Using
+// the UTC getters consistently avoids that regardless of server timezone.
+function monthKey(date) {
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
+}
+
+// Builds one zero-filled bucket per month in the range (oldest first) so the
+// chart always shows a continuous 6-month axis, even for months with no
+// transactions, then sums each transaction into its bucket by type.
+function buildMonthlyBreakdown(transactions, rangeStart) {
+  const buckets = new Map();
+  for (let i = 0; i < MONTHS_IN_SUMMARY; i++) {
+    const bucketDate = new Date(Date.UTC(rangeStart.getUTCFullYear(), rangeStart.getUTCMonth() + i, 1));
+    const key = monthKey(bucketDate);
+    buckets.set(key, { month: key, income: 0, expense: 0 });
+  }
+
+  for (const transaction of transactions) {
+    const bucket = buckets.get(monthKey(new Date(transaction.date)));
+    if (!bucket) continue;
+
+    const amount = Number(transaction.amount);
+    if (transaction.type === "INCOME") {
+      bucket.income += amount;
+    } else {
+      bucket.expense += amount;
+    }
+  }
+
+  return Array.from(buckets.values());
+}
+
+export async function getSummary(userId) {
+  const now = new Date();
+  const rangeStart = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - (MONTHS_IN_SUMMARY - 1), 1)
+  );
+
+  // Two independent queries: an all-time sum per type (for the overall
+  // balance) and the raw transactions from the last 6 months (to build the
+  // chart). Fetching only 6 months of rows keeps this cheap even as
+  // transaction history grows, while the balance still reflects everything.
+  const [totalsByType, recentTransactions] = await Promise.all([
+    prisma.transaction.groupBy({
+      by: ["type"],
+      where: { userId },
+      _sum: { amount: true },
+    }),
+    prisma.transaction.findMany({
+      where: { userId, date: { gte: rangeStart } },
+      select: { type: true, amount: true, date: true },
+    }),
+  ]);
+
+  const totalFor = (type) =>
+    Number(totalsByType.find((entry) => entry.type === type)?._sum.amount ?? 0);
+  const balance = totalFor("INCOME") - totalFor("EXPENSE");
+
+  const monthlyBreakdown = buildMonthlyBreakdown(recentTransactions, rangeStart);
+  const currentMonth = monthlyBreakdown[monthlyBreakdown.length - 1];
+
+  return {
+    balance,
+    currentMonth: { income: currentMonth.income, expense: currentMonth.expense },
+    monthlyBreakdown,
+  };
+}
