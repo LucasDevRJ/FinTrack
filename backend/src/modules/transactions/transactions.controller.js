@@ -11,7 +11,7 @@ export async function create(req, res, next) {
 
 export async function list(req, res, next) {
   try {
-    const transactions = await transactionsService.listTransactions(req.userId);
+    const transactions = await transactionsService.listTransactions(req.userId, req.query);
     res.status(200).json(transactions);
   } catch (err) {
     next(err);

@@ -24,9 +24,21 @@ export async function createTransaction(userId, data) {
   return serializeTransaction(transaction);
 }
 
-export async function listTransactions(userId) {
+export async function listTransactions(userId, filters = {}) {
+  const where = { userId };
+
+  if (filters.category) {
+    where.category = { contains: filters.category, mode: "insensitive" };
+  }
+
+  if (filters.startDate || filters.endDate) {
+    where.date = {};
+    if (filters.startDate) where.date.gte = filters.startDate;
+    if (filters.endDate) where.date.lte = filters.endDate;
+  }
+
   const transactions = await prisma.transaction.findMany({
-    where: { userId },
+    where,
     orderBy: { date: "desc" },
   });
   return transactions.map(serializeTransaction);

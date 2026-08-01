@@ -32,3 +32,14 @@ export const updateTransactionSchema = createTransactionSchema
 export const idParamSchema = z.object({
   id: z.string().uuid("ID inválido"),
 });
+
+export const listTransactionsQuerySchema = z
+  .object({
+    startDate: z.coerce.date({ invalid_type_error: "Data inicial inválida" }).optional(),
+    endDate: z.coerce.date({ invalid_type_error: "Data final inválida" }).optional(),
+    category: z.string().trim().min(1).max(50).optional(),
+  })
+  .refine((data) => !data.startDate || !data.endDate || data.startDate <= data.endDate, {
+    message: "Data inicial deve ser anterior ou igual à data final",
+    path: ["startDate"],
+  });

@@ -14,6 +14,8 @@ function formatDate(isoDate) {
   return new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" }).format(new Date(isoDate));
 }
 
+const EMPTY_FILTERS = { startDate: "", endDate: "", category: "" };
+
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState(null);
   const [loadError, setLoadError] = useState("");
@@ -22,12 +24,32 @@ export default function TransactionsPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmingDeleteId, setConfirmingDeleteId] = useState(null);
+  const [filters, setFilters] = useState(EMPTY_FILTERS);
+  const [appliedFilters, setAppliedFilters] = useState(EMPTY_FILTERS);
 
-  useEffect(() => {
-    listTransactionsRequest()
+  function loadTransactions(activeFilters) {
+    return listTransactionsRequest(activeFilters)
       .then(setTransactions)
       .catch(() => setLoadError("Não foi possível carregar as transações"));
-  }, []);
+  }
+
+  useEffect(() => {
+    loadTransactions(appliedFilters);
+  }, [appliedFilters]);
+
+  function handleFilterSubmit(event) {
+    event.preventDefault();
+    setAppliedFilters(filters);
+  }
+
+  function handleClearFilters() {
+    setFilters(EMPTY_FILTERS);
+    setAppliedFilters(EMPTY_FILTERS);
+  }
+
+  const hasActiveFilters = Boolean(
+    appliedFilters.startDate || appliedFilters.endDate || appliedFilters.category
+  );
 
   function openCreateForm() {
     setEditingTransaction(null);
@@ -51,12 +73,11 @@ export default function TransactionsPage() {
     setActionError("");
     try {
       if (editingTransaction) {
-        const updated = await updateTransactionRequest(editingTransaction.id, values);
-        setTransactions((current) => current.map((t) => (t.id === updated.id ? updated : t)));
+        await updateTransactionRequest(editingTransaction.id, values);
       } else {
-        const created = await createTransactionRequest(values);
-        setTransactions((current) => [created, ...current]);
+        await createTransactionRequest(values);
       }
+      await loadTransactions(appliedFilters);
       closeForm();
     } catch (err) {
       setActionError(err.response?.data?.message ?? "Não foi possível salvar a transação");
@@ -69,7 +90,7 @@ export default function TransactionsPage() {
     setActionError("");
     try {
       await deleteTransactionRequest(id);
-      setTransactions((current) => current.filter((t) => t.id !== id));
+      await loadTransactions(appliedFilters);
     } catch {
       setActionError("Não foi possível excluir a transação");
     } finally {
@@ -106,13 +127,75 @@ export default function TransactionsPage() {
           </div>
         )}
 
+        <form
+          onSubmit={handleFilterSubmit}
+          className="mb-6 flex flex-wrap items-end gap-4 rounded-lg bg-white p-5 shadow"
+        >
+          <div>
+            <label htmlFor="filter-start-date" className="block text-sm font-medium text-gray-700">
+              De
+            </label>
+            <input
+              id="filter-start-date"
+              type="date"
+              value={filters.startDate}
+              onChange={(event) => setFilters((f) => ({ ...f, startDate: event.target.value }))}
+              className="mt-1 rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="filter-end-date" className="block text-sm font-medium text-gray-700">
+              Até
+            </label>
+            <input
+              id="filter-end-date"
+              type="date"
+              value={filters.endDate}
+              onChange={(event) => setFilters((f) => ({ ...f, endDate: event.target.value }))}
+              className="mt-1 rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="filter-category" className="block text-sm font-medium text-gray-700">
+              Categoria
+            </label>
+            <input
+              id="filter-category"
+              type="text"
+              value={filters.category}
+              onChange={(event) => setFilters((f) => ({ ...f, category: event.target.value }))}
+              className="mt-1 rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none"
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+          >
+            Filtrar
+          </button>
+          <button
+            type="button"
+            onClick={handleClearFilters}
+            className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+          >
+            Limpar
+          </button>
+        </form>
+
         {loadError && <p className="text-sm text-red-600">{loadError}</p>}
         {!isFormOpen && actionError && <p className="mb-4 text-sm text-red-600">{actionError}</p>}
 
         {!loadError && !transactions && <p className="text-gray-500">Carregando...</p>}
 
         {transactions && transactions.length === 0 && (
-          <p className="text-gray-500">Nenhuma transação cadastrada ainda.</p>
+          <p className="text-gray-500">
+            {hasActiveFilters
+              ? "Nenhuma transação encontrada para os filtros selecionados."
+              : "Nenhuma transação cadastrada ainda."}
+          </p>
         )}
 
         {transactions && transactions.length > 0 && (

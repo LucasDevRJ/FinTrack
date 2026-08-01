@@ -5,6 +5,7 @@ import * as transactionsController from "./transactions.controller.js";
 import {
   createTransactionSchema,
   idParamSchema,
+  listTransactionsQuerySchema,
   updateTransactionSchema,
 } from "./transactions.schema.js";
 
@@ -15,7 +16,7 @@ const router = Router();
 router.use(protect);
 
 router.post("/", validate(createTransactionSchema), transactionsController.create);
-router.get("/", transactionsController.list);
+router.get("/", validate(listTransactionsQuerySchema, "query"), transactionsController.list);
 // Must come before "/:id" — otherwise Express would match "summary" as the
 // :id param, and idParamSchema would reject it as an invalid UUID.
 router.get("/summary", transactionsController.summary);

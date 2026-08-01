@@ -5,8 +5,13 @@ export async function getSummaryRequest() {
   return data;
 }
 
-export async function listTransactionsRequest() {
-  const { data } = await apiClient.get("/transactions");
+export async function listTransactionsRequest(filters = {}) {
+  const params = {};
+  if (filters.startDate) params.startDate = filters.startDate;
+  if (filters.endDate) params.endDate = filters.endDate;
+  if (filters.category) params.category = filters.category;
+
+  const { data } = await apiClient.get("/transactions", { params });
   return data;
 }
 
