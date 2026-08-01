@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getSummaryRequest } from "../api/transactions.js";
+import CategoryBreakdownChart from "../components/CategoryBreakdownChart.jsx";
 import Header from "../components/Header.jsx";
 import MonthlyBarChart from "../components/MonthlyBarChart.jsx";
 import { formatCurrency } from "../utils/currency.js";
@@ -40,11 +41,20 @@ export default function DashboardPage() {
               <SummaryCard label="Despesas do mês" value={summary.currentMonth.expense} />
             </div>
 
-            <div className="rounded-lg bg-white p-5 shadow">
-              <h2 className="mb-4 text-sm font-medium text-gray-700">
-                Receitas x despesas (últimos 6 meses)
-              </h2>
-              <MonthlyBarChart data={summary.monthlyBreakdown} />
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              <div className="rounded-lg bg-white p-5 shadow">
+                <h2 className="mb-4 text-sm font-medium text-gray-700">
+                  Receitas x despesas (últimos 6 meses)
+                </h2>
+                <MonthlyBarChart data={summary.monthlyBreakdown} />
+              </div>
+
+              <div className="rounded-lg bg-white p-5 shadow">
+                <h2 className="mb-4 text-sm font-medium text-gray-700">
+                  Despesas por categoria (mês atual)
+                </h2>
+                <CategoryBreakdownChart data={summary.categoryBreakdown} />
+              </div>
             </div>
           </>
         )}

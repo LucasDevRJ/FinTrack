@@ -99,6 +99,39 @@ function buildMonthlyBreakdown(transactions, rangeStart) {
   return Array.from(buckets.values());
 }
 
+const CATEGORY_BREAKDOWN_LIMIT = 6;
+const OTHER_CATEGORY_LABEL = "Outras";
+
+// Sums the current month's expenses by category, sorted highest first. Past
+// the top 6 categories the tail is folded into a single "Outras" bucket
+// instead of growing the chart indefinitely — categories are free text, so
+// there's no fixed cardinality to design around.
+function buildCategoryBreakdown(transactions, currentMonthKey) {
+  const totals = new Map();
+
+  for (const transaction of transactions) {
+    if (transaction.type !== "EXPENSE") continue;
+    if (monthKey(new Date(transaction.date)) !== currentMonthKey) continue;
+
+    const amount = Number(transaction.amount);
+    totals.set(transaction.category, (totals.get(transaction.category) ?? 0) + amount);
+  }
+
+  const sorted = Array.from(totals, ([category, amount]) => ({ category, amount })).sort(
+    (a, b) => b.amount - a.amount
+  );
+
+  const top = sorted.slice(0, CATEGORY_BREAKDOWN_LIMIT);
+  const rest = sorted.slice(CATEGORY_BREAKDOWN_LIMIT);
+
+  if (rest.length > 0) {
+    const otherTotal = rest.reduce((sum, entry) => sum + entry.amount, 0);
+    top.push({ category: OTHER_CATEGORY_LABEL, amount: otherTotal });
+  }
+
+  return top;
+}
+
 export async function getSummary(userId) {
   const now = new Date();
   const rangeStart = new Date(
@@ -117,7 +150,7 @@ export async function getSummary(userId) {
     }),
     prisma.transaction.findMany({
       where: { userId, date: { gte: rangeStart } },
-      select: { type: true, amount: true, date: true },
+      select: { type: true, amount: true, date: true, category: true },
     }),
   ]);
 
@@ -128,9 +161,12 @@ export async function getSummary(userId) {
   const monthlyBreakdown = buildMonthlyBreakdown(recentTransactions, rangeStart);
   const currentMonth = monthlyBreakdown[monthlyBreakdown.length - 1];
 
+  const categoryBreakdown = buildCategoryBreakdown(recentTransactions, currentMonth.month);
+
   return {
     balance,
     currentMonth: { income: currentMonth.income, expense: currentMonth.expense },
     monthlyBreakdown,
+    categoryBreakdown,
   };
 }
