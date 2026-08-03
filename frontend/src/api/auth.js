@@ -14,3 +14,7 @@ export async function meRequest() {
   const { data } = await apiClient.get("/auth/me");
   return data;
 }
+
+export async function deleteAccountRequest(password) {
+  await apiClient.delete("/auth/me", { data: { password } });
+}

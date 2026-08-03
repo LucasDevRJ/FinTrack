@@ -11,3 +11,7 @@ export const loginSchema = z.object({
   email: z.string().trim().toLowerCase().email("E-mail inválido"),
   password: z.string().min(1, "Senha é obrigatória"),
 });
+
+export const deleteAccountSchema = z.object({
+  password: z.string().min(1, "Senha é obrigatória"),
+});

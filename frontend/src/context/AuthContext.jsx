@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { loginRequest, meRequest, registerRequest } from "../api/auth.js";
+import { deleteAccountRequest, loginRequest, meRequest, registerRequest } from "../api/auth.js";
 
 const AuthContext = createContext(null);
 
@@ -40,8 +40,13 @@ export function AuthProvider({ children }) {
     setUser(null);
   }
 
+  async function deleteAccount(password) {
+    await deleteAccountRequest(password);
+    logout();
+  }
+
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, login, register, logout, deleteAccount }}>
       {children}
     </AuthContext.Provider>
   );

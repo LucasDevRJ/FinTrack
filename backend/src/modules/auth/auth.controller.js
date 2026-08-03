@@ -26,3 +26,12 @@ export async function me(req, res, next) {
     next(err);
   }
 }
+
+export async function deleteAccount(req, res, next) {
+  try {
+    await authService.deleteUserAccount(req.userId, req.body.password);
+    res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+}

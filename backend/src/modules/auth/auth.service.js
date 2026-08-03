@@ -44,3 +44,14 @@ export async function getUserById(id) {
   if (!user) throw new AppError("Usuário não encontrado", 404);
   return sanitizeUser(user);
 }
+
+export async function deleteUserAccount(id, password) {
+  const user = await prisma.user.findUnique({ where: { id } });
+  if (!user) throw new AppError("Usuário não encontrado", 404);
+
+  const passwordMatches = await bcrypt.compare(password, user.password);
+  if (!passwordMatches) throw new AppError("Senha incorreta", 401);
+
+  // Transaction rows cascade-delete via the schema's onDelete: Cascade.
+  await prisma.user.delete({ where: { id } });
+}
