@@ -15,6 +15,11 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Hashed (sha256) single-use token for the "forgot password" flow, plus its
+  // expiry. Both null when no reset is pending.
+  resetPasswordTokenHash String?
+  resetPasswordExpiresAt DateTime?
+
   transactions Transaction[]
 
   @@map("users")

@@ -35,3 +35,23 @@ export async function deleteAccount(req, res, next) {
     next(err);
   }
 }
+
+export async function forgotPassword(req, res, next) {
+  try {
+    await authService.requestPasswordReset(req.body.email);
+    // Same response whether or not the email is registered — see
+    // requestPasswordReset for why.
+    res.status(200).json({ message: "Se o e-mail existir, enviamos um link de redefinição" });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function resetPassword(req, res, next) {
+  try {
+    await authService.resetPassword(req.body.token, req.body.password);
+    res.status(200).json({ message: "Senha redefinida com sucesso" });
+  } catch (err) {
+    next(err);
+  }
+}
