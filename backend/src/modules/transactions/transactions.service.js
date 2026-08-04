@@ -1,5 +1,6 @@
 import prisma from "../../lib/prisma.js";
 import { AppError } from "../../utils/AppError.js";
+import { toCsv } from "../../utils/csv.js";
 
 // Prisma returns `amount` as a Decimal instance (precise for DB math), but
 // the API just needs to hand it to the frontend for display — a plain
@@ -42,6 +43,34 @@ export async function listTransactions(userId, filters = {}) {
     orderBy: { date: "desc" },
   });
   return transactions.map(serializeTransaction);
+}
+
+const TYPE_LABELS = { INCOME: "Receita", EXPENSE: "Despesa" };
+const CSV_HEADERS = ["Data", "Tipo", "Categoria", "Descrição", "Valor"];
+
+// Reuses listTransactions so the export respects the exact same
+// startDate/endDate/category filters as the on-screen list. `date` is
+// re-sliced to YYYY-MM-DD via the UTC getters (not toLocaleDateString) for
+// the same timezone-safety reason as buildMonthlyBreakdown below — the
+// stored instant is always UTC midnight for a calendar date. Amount uses a
+// comma decimal separator to match the ";" delimiter convention used by
+// Brazilian-locale spreadsheet apps.
+export async function exportTransactionsCsv(userId, filters = {}) {
+  const transactions = await listTransactions(userId, filters);
+
+  const rows = transactions.map((transaction) => {
+    const date = new Date(transaction.date);
+    const isoDate = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}-${String(date.getUTCDate()).padStart(2, "0")}`;
+    return [
+      isoDate,
+      TYPE_LABELS[transaction.type] ?? transaction.type,
+      transaction.category,
+      transaction.description ?? "",
+      transaction.amount.toFixed(2).replace(".", ","),
+    ];
+  });
+
+  return toCsv(CSV_HEADERS, rows);
 }
 
 export async function getTransactionById(userId, id) {

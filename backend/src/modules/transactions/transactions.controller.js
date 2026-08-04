@@ -18,6 +18,18 @@ export async function list(req, res, next) {
   }
 }
 
+export async function exportCsv(req, res, next) {
+  try {
+    const csv = await transactionsService.exportTransactionsCsv(req.userId, req.query);
+    const filename = `fintrack-transacoes-${new Date().toISOString().slice(0, 10)}.csv`;
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.status(200).send(csv);
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function summary(req, res, next) {
   try {
     const data = await transactionsService.getSummary(req.userId);

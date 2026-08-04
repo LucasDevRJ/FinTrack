@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import {
   createTransactionRequest,
   deleteTransactionRequest,
+  exportTransactionsRequest,
   listTransactionsRequest,
   updateTransactionRequest,
 } from "../api/transactions.js";
@@ -26,6 +27,8 @@ export default function TransactionsPage() {
   const [confirmingDeleteId, setConfirmingDeleteId] = useState(null);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [appliedFilters, setAppliedFilters] = useState(EMPTY_FILTERS);
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportError, setExportError] = useState("");
 
   function loadTransactions(activeFilters) {
     return listTransactionsRequest(activeFilters)
@@ -45,6 +48,20 @@ export default function TransactionsPage() {
   function handleClearFilters() {
     setFilters(EMPTY_FILTERS);
     setAppliedFilters(EMPTY_FILTERS);
+  }
+
+  async function handleExport() {
+    setIsExporting(true);
+    setExportError("");
+    try {
+      // Exports the currently applied filters, not the unsubmitted draft in
+      // the form inputs — same source of truth the visible table uses.
+      await exportTransactionsRequest(appliedFilters);
+    } catch {
+      setExportError("Não foi possível exportar o CSV");
+    } finally {
+      setIsExporting(false);
+    }
   }
 
   const hasActiveFilters = Boolean(
@@ -106,14 +123,24 @@ export default function TransactionsPage() {
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-xl font-semibold text-gray-900">Transações</h2>
           {!isFormOpen && (
-            <button
-              onClick={openCreateForm}
-              className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
-            >
-              Nova transação
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={handleExport}
+                disabled={isExporting || !transactions?.length}
+                className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isExporting ? "Exportando..." : "Exportar CSV"}
+              </button>
+              <button
+                onClick={openCreateForm}
+                className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+              >
+                Nova transação
+              </button>
+            </div>
           )}
         </div>
+        {exportError && <p className="mb-4 text-sm text-red-600">{exportError}</p>}
 
         {isFormOpen && (
           <div className="mb-6 rounded-lg bg-white p-5 shadow">

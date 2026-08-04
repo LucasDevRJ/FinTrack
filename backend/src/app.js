@@ -9,7 +9,10 @@ import transactionsRoutes from "./modules/transactions/transactions.routes.js";
 const app = express();
 
 app.use(helmet());
-app.use(cors({ origin: process.env.CORS_ORIGIN }));
+// exposedHeaders lets the frontend read Content-Disposition off the CSV
+// export response — browsers hide response headers from JS by default
+// unless the server explicitly allow-lists them via CORS.
+app.use(cors({ origin: process.env.CORS_ORIGIN, exposedHeaders: ["Content-Disposition"] }));
 app.use(express.json());
 
 if (process.env.NODE_ENV !== "production") {
