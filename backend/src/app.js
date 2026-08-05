@@ -4,6 +4,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 import authRoutes from "./modules/auth/auth.routes.js";
+import budgetsRoutes from "./modules/budgets/budgets.routes.js";
 import transactionsRoutes from "./modules/transactions/transactions.routes.js";
 
 const app = express();
@@ -22,6 +23,7 @@ if (process.env.NODE_ENV !== "production") {
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 app.use("/api/auth", authRoutes);
 app.use("/api/transactions", transactionsRoutes);
+app.use("/api/budgets", budgetsRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

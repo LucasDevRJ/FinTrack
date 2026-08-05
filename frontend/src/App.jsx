@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import AccountPage from "./pages/AccountPage.jsx";
+import BudgetsPage from "./pages/BudgetsPage.jsx";
 import DashboardPage from "./pages/DashboardPage.jsx";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
@@ -28,6 +29,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <TransactionsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/budgets"
+        element={
+          <ProtectedRoute>
+            <BudgetsPage />
           </ProtectedRoute>
         }
       />

@@ -21,6 +21,7 @@ model User {
   resetPasswordExpiresAt DateTime?
 
   transactions Transaction[]
+  budgetGoals  BudgetGoal[]
 
   @@map("users")
 }
@@ -45,4 +46,24 @@ model Transaction {
 
   @@index([userId, date])
   @@map("transactions")
+}
+
+// One recurring monthly spending cap per category — not tied to a specific
+// month, it's compared against whatever the current calendar month's
+// EXPENSE total for that category is (see budgets.service.js). The unique
+// constraint is a DB-level backstop; the app also pre-checks case-
+// insensitively before insert (categories are free text, so "Mercado" and
+// "mercado" would otherwise both slip through as "different" categories).
+model BudgetGoal {
+  id           String   @id @default(uuid())
+  category     String
+  monthlyLimit Decimal  @db.Decimal(12, 2)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, category])
+  @@map("budget_goals")
 }

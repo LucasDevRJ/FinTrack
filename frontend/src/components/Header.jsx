@@ -19,6 +19,9 @@ export default function Header() {
           <NavLink to="/transactions" className={navLinkClass}>
             Transações
           </NavLink>
+          <NavLink to="/budgets" className={navLinkClass}>
+            Orçamentos
+          </NavLink>
           <NavLink to="/account" className={navLinkClass}>
             Minha conta
           </NavLink>
