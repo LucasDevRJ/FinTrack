@@ -20,7 +20,13 @@ export const createRecurringTransactionSchema = z
     description: z.string().trim().max(500).optional(),
     dayOfMonth: dayOfMonthSchema,
     startDate: z.coerce.date({ invalid_type_error: "Data inicial inválida" }),
-    endDate: z.coerce.date({ invalid_type_error: "Data final inválida" }).optional(),
+    // .nullable() matters here, not just .optional(): the frontend form
+    // sends `endDate: null` (not an omitted key) when "Fim" is left blank.
+    // Without .nullable(), z.coerce.date() would coerce that null into
+    // `new Date(null)` (the Unix epoch, 1970-01-01) instead of treating it
+    // as "no end date" — a valid-looking but wrong-way-too-early date that
+    // then fails the startDate <= endDate refine below.
+    endDate: z.coerce.date({ invalid_type_error: "Data final inválida" }).optional().nullable(),
   })
   .refine((data) => !data.endDate || data.startDate <= data.endDate, {
     message: "Data final deve ser posterior ou igual à data inicial",
