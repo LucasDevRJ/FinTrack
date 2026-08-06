@@ -5,6 +5,7 @@ import morgan from "morgan";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 import authRoutes from "./modules/auth/auth.routes.js";
 import budgetsRoutes from "./modules/budgets/budgets.routes.js";
+import recurringRoutes from "./modules/recurring/recurring.routes.js";
 import transactionsRoutes from "./modules/transactions/transactions.routes.js";
 
 const app = express();
@@ -24,6 +25,7 @@ app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 app.use("/api/auth", authRoutes);
 app.use("/api/transactions", transactionsRoutes);
 app.use("/api/budgets", budgetsRoutes);
+app.use("/api/recurring", recurringRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

@@ -1,4 +1,5 @@
 import prisma from "../../lib/prisma.js";
+import { generateDueRecurringTransactions } from "../recurring/recurring.service.js";
 import { AppError } from "../../utils/AppError.js";
 import { toCsv } from "../../utils/csv.js";
 
@@ -26,6 +27,11 @@ export async function createTransaction(userId, data) {
 }
 
 export async function listTransactions(userId, filters = {}) {
+  // Materialize any past-due recurring occurrences first, so the list (and
+  // exportTransactionsCsv, which calls this) always reflects them without
+  // the user having to wait for a scheduled job.
+  await generateDueRecurringTransactions(userId);
+
   const where = { userId };
 
   if (filters.category) {
@@ -162,6 +168,11 @@ function buildCategoryBreakdown(transactions, currentMonthKey) {
 }
 
 export async function getSummary(userId) {
+  // Same catch-up as listTransactions — the dashboard is often the first
+  // page a user hits, and shouldn't miss a recurring transaction that came
+  // due since their last visit.
+  await generateDueRecurringTransactions(userId);
+
   const now = new Date();
   const rangeStart = new Date(
     Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - (MONTHS_IN_SUMMARY - 1), 1)

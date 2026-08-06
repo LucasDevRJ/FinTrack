@@ -5,6 +5,7 @@ import BudgetsPage from "./pages/BudgetsPage.jsx";
 import DashboardPage from "./pages/DashboardPage.jsx";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
+import RecurringPage from "./pages/RecurringPage.jsx";
 import RegisterPage from "./pages/RegisterPage.jsx";
 import ResetPasswordPage from "./pages/ResetPasswordPage.jsx";
 import TransactionsPage from "./pages/TransactionsPage.jsx";
@@ -37,6 +38,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <BudgetsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/recurring"
+        element={
+          <ProtectedRoute>
+            <RecurringPage />
           </ProtectedRoute>
         }
       />

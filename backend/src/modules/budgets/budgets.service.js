@@ -1,4 +1,5 @@
 import prisma from "../../lib/prisma.js";
+import { generateDueRecurringTransactions } from "../recurring/recurring.service.js";
 import { AppError } from "../../utils/AppError.js";
 
 function serializeBudgetGoal(goal) {
@@ -68,6 +69,11 @@ function getCurrentMonthRange() {
 // month, so "this month's total" is recomputed fresh on every read rather
 // than stored.
 export async function listBudgetGoalsWithProgress(userId) {
+  // Same catch-up as transactions.service.js — a recurring EXPENSE due this
+  // month should count against its category's budget the moment it's due,
+  // not only once the user happens to open the transactions/dashboard page.
+  await generateDueRecurringTransactions(userId);
+
   const { start, end } = getCurrentMonthRange();
 
   const [goals, expenses] = await Promise.all([

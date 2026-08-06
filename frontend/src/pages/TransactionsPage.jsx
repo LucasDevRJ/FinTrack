@@ -241,7 +241,14 @@ export default function TransactionsPage() {
                 {transactions.map((transaction) => (
                   <tr key={transaction.id} className="border-b border-gray-100 last:border-0">
                     <td className="px-4 py-3 text-gray-700">{formatDate(transaction.date)}</td>
-                    <td className="px-4 py-3 text-gray-700">{transaction.category}</td>
+                    <td className="px-4 py-3 text-gray-700">
+                      {transaction.category}
+                      {transaction.recurringTransactionId && (
+                        <span className="ml-2 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
+                          Recorrente
+                        </span>
+                      )}
+                    </td>
                     <td className="px-4 py-3 text-gray-500">{transaction.description || "—"}</td>
                     <td
                       className="px-4 py-3 text-right font-medium"
