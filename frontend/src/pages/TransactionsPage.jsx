@@ -8,6 +8,7 @@ import {
 } from "../api/transactions.js";
 import Header from "../components/Header.jsx";
 import TransactionForm from "../components/TransactionForm.jsx";
+import { getErrorMessage } from "../utils/apiError.js";
 import { formatCurrency } from "../utils/currency.js";
 import { EXPENSE_COLOR, INCOME_COLOR } from "../utils/transactionColors.js";
 
@@ -104,7 +105,7 @@ export default function TransactionsPage() {
       await loadTransactions(appliedFilters, page);
       closeForm();
     } catch (err) {
-      setActionError(err.response?.data?.message ?? "Não foi possível salvar a transação");
+      setActionError(getErrorMessage(err, "Não foi possível salvar a transação"));
     } finally {
       setIsSubmitting(false);
     }

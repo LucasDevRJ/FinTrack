@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { useAuth } from "../context/AuthContext.jsx";
+import { getErrorMessage } from "../utils/apiError.js";
 
 export default function RegisterPage() {
   const { register } = useAuth();
@@ -20,7 +21,7 @@ export default function RegisterPage() {
       await register(name, email, password);
       navigate("/dashboard");
     } catch (err) {
-      setError(err.response?.data?.message ?? "Não foi possível criar a conta");
+      setError(getErrorMessage(err, "Não foi possível criar a conta"));
     } finally {
       setIsSubmitting(false);
     }

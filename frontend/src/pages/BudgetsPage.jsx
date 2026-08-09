@@ -8,6 +8,7 @@ import {
 import BudgetGoalForm from "../components/BudgetGoalForm.jsx";
 import BudgetProgressBar from "../components/BudgetProgressBar.jsx";
 import Header from "../components/Header.jsx";
+import { getErrorMessage } from "../utils/apiError.js";
 
 export default function BudgetsPage() {
   const [goals, setGoals] = useState(null);
@@ -57,7 +58,7 @@ export default function BudgetsPage() {
       await loadGoals();
       closeForm();
     } catch (err) {
-      setActionError(err.response?.data?.message ?? "Não foi possível salvar a meta");
+      setActionError(getErrorMessage(err, "Não foi possível salvar a meta"));
     } finally {
       setIsSubmitting(false);
     }

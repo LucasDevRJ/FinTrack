@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router";
 import { forgotPasswordRequest } from "../api/auth.js";
+import { getErrorMessage } from "../utils/apiError.js";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -17,7 +18,7 @@ export default function ForgotPasswordPage() {
       await forgotPasswordRequest(email);
       setIsSubmitted(true);
     } catch (err) {
-      setError(err.response?.data?.message ?? "Não foi possível enviar o e-mail");
+      setError(getErrorMessage(err, "Não foi possível enviar o e-mail"));
     } finally {
       setIsSubmitting(false);
     }

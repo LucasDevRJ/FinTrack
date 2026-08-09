@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import Header from "../components/Header.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
+import { getErrorMessage } from "../utils/apiError.js";
 
 export default function AccountPage() {
   const { user, deleteAccount } = useAuth();
@@ -25,7 +26,7 @@ export default function AccountPage() {
       await deleteAccount(password);
       navigate("/login");
     } catch (err) {
-      setError(err.response?.data?.message ?? "Não foi possível excluir a conta");
+      setError(getErrorMessage(err, "Não foi possível excluir a conta"));
     } finally {
       setIsSubmitting(false);
     }

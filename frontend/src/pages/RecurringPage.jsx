@@ -8,6 +8,7 @@ import {
 import Header from "../components/Header.jsx";
 import RecurringTransactionForm from "../components/RecurringTransactionForm.jsx";
 import { formatCurrency } from "../utils/currency.js";
+import { getErrorMessage } from "../utils/apiError.js";
 import { EXPENSE_COLOR, INCOME_COLOR } from "../utils/transactionColors.js";
 
 function formatDate(isoDate) {
@@ -62,7 +63,7 @@ export default function RecurringPage() {
       await loadTemplates();
       closeForm();
     } catch (err) {
-      setActionError(err.response?.data?.message ?? "Não foi possível salvar a transação recorrente");
+      setActionError(getErrorMessage(err, "Não foi possível salvar a transação recorrente"));
     } finally {
       setIsSubmitting(false);
     }

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { resetPasswordRequest } from "../api/auth.js";
+import { getErrorMessage } from "../utils/apiError.js";
 
 export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
@@ -26,7 +27,7 @@ export default function ResetPasswordPage() {
       await resetPasswordRequest(token, password);
       navigate("/login");
     } catch (err) {
-      setError(err.response?.data?.message ?? "Não foi possível redefinir a senha");
+      setError(getErrorMessage(err, "Não foi possível redefinir a senha"));
     } finally {
       setIsSubmitting(false);
     }

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { useAuth } from "../context/AuthContext.jsx";
+import { getErrorMessage } from "../utils/apiError.js";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -19,7 +20,7 @@ export default function LoginPage() {
       await login(email, password);
       navigate("/dashboard");
     } catch (err) {
-      setError(err.response?.data?.message ?? "Não foi possível fazer login");
+      setError(getErrorMessage(err, "Não foi possível fazer login"));
     } finally {
       setIsSubmitting(false);
     }
