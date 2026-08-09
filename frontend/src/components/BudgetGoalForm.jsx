@@ -13,7 +13,10 @@ export default function BudgetGoalForm({ initialValues, onSubmit, onCancel, isSu
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label htmlFor="budget-category" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="budget-category"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
             Categoria
           </label>
           <input
@@ -23,12 +26,15 @@ export default function BudgetGoalForm({ initialValues, onSubmit, onCancel, isSu
             maxLength={50}
             value={category}
             onChange={(event) => setCategory(event.target.value)}
-            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none"
+            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
           />
         </div>
 
         <div>
-          <label htmlFor="budget-limit" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="budget-limit"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
             Limite mensal
           </label>
           <input
@@ -39,12 +45,12 @@ export default function BudgetGoalForm({ initialValues, onSubmit, onCancel, isSu
             required
             value={monthlyLimit}
             onChange={(event) => setMonthlyLimit(event.target.value)}
-            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none"
+            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
           />
         </div>
       </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
       <div className="flex gap-3">
         <button
@@ -57,7 +63,7 @@ export default function BudgetGoalForm({ initialValues, onSubmit, onCancel, isSu
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+          className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
         >
           Cancelar
         </button>

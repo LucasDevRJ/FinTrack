@@ -41,13 +41,15 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-sm rounded-lg bg-white p-8 shadow">
-        <h1 className="mb-6 text-2xl font-semibold text-gray-900">Entrar no FinTrack</h1>
+    <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4 dark:bg-gray-900">
+      <div className="w-full max-w-sm rounded-lg bg-white p-8 shadow dark:bg-gray-800">
+        <h1 className="mb-6 text-2xl font-semibold text-gray-900 dark:text-gray-100">
+          Entrar no FinTrack
+        </h1>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               E-mail
             </label>
             <input
@@ -56,12 +58,12 @@ export default function LoginPage() {
               required
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none"
+              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Senha
             </label>
             <input
@@ -70,11 +72,11 @@ export default function LoginPage() {
               required
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none"
+              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
             />
           </div>
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
           <button
             type="submit"
@@ -86,29 +88,29 @@ export default function LoginPage() {
         </form>
 
         <div className="my-4 flex items-center gap-3">
-          <div className="h-px flex-1 bg-gray-200" />
-          <span className="text-xs text-gray-400">ou</span>
-          <div className="h-px flex-1 bg-gray-200" />
+          <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
+          <span className="text-xs text-gray-400 dark:text-gray-500">ou</span>
+          <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
         </div>
 
         <button
           type="button"
           onClick={handleDemoLogin}
           disabled={isDemoLoading}
-          className="w-full rounded-md border border-gray-300 py-2 font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+          className="w-full rounded-md border border-gray-300 py-2 font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
         >
           {isDemoLoading ? "Entrando..." : "Entrar como visitante"}
         </button>
 
-        <p className="mt-4 text-center text-sm text-gray-600">
-          <Link to="/forgot-password" className="text-indigo-600 hover:underline">
+        <p className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
+          <Link to="/forgot-password" className="text-indigo-600 hover:underline dark:text-indigo-400">
             Esqueceu a senha?
           </Link>
         </p>
 
-        <p className="mt-2 text-center text-sm text-gray-600">
+        <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
           Não tem conta?{" "}
-          <Link to="/register" className="text-indigo-600 hover:underline">
+          <Link to="/register" className="text-indigo-600 hover:underline dark:text-indigo-400">
             Cadastre-se
           </Link>
         </p>

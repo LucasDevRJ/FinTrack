@@ -77,12 +77,14 @@ export default function BudgetsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 p-4 sm:p-8">
+    <main className="min-h-screen bg-gray-50 p-4 sm:p-8 dark:bg-gray-900">
       <div className="mx-auto max-w-4xl">
         <Header />
 
         <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-gray-900">Metas de orçamento</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+            Metas de orçamento
+          </h2>
           {!isFormOpen && (
             <button
               onClick={openCreateForm}
@@ -94,7 +96,7 @@ export default function BudgetsPage() {
         </div>
 
         {isFormOpen && (
-          <div className="mb-6 rounded-lg bg-white p-5 shadow">
+          <div className="mb-6 rounded-lg bg-white p-5 shadow dark:bg-gray-800">
             <BudgetGoalForm
               initialValues={editingGoal}
               onSubmit={handleSubmit}
@@ -105,13 +107,15 @@ export default function BudgetsPage() {
           </div>
         )}
 
-        {loadError && <p className="text-sm text-red-600">{loadError}</p>}
-        {!isFormOpen && actionError && <p className="mb-4 text-sm text-red-600">{actionError}</p>}
+        {loadError && <p className="text-sm text-red-600 dark:text-red-400">{loadError}</p>}
+        {!isFormOpen && actionError && (
+          <p className="mb-4 text-sm text-red-600 dark:text-red-400">{actionError}</p>
+        )}
 
-        {!loadError && !goals && <p className="text-gray-500">Carregando...</p>}
+        {!loadError && !goals && <p className="text-gray-500 dark:text-gray-400">Carregando...</p>}
 
         {goals && goals.length === 0 && (
-          <p className="text-gray-500">
+          <p className="text-gray-500 dark:text-gray-400">
             Nenhuma meta cadastrada ainda. Defina um limite mensal por categoria para
             acompanhar seus gastos.
           </p>
@@ -120,20 +124,20 @@ export default function BudgetsPage() {
         {goals && goals.length > 0 && (
           <div className="space-y-4">
             {goals.map((goal) => (
-              <div key={goal.id} className="rounded-lg bg-white p-5 shadow">
+              <div key={goal.id} className="rounded-lg bg-white p-5 shadow dark:bg-gray-800">
                 <div className="mb-3 flex items-center justify-between">
-                  <h3 className="font-medium text-gray-900">{goal.category}</h3>
+                  <h3 className="font-medium text-gray-900 dark:text-gray-100">{goal.category}</h3>
                   {confirmingDeleteId === goal.id ? (
                     <span className="space-x-3">
                       <button
                         onClick={() => handleDelete(goal.id)}
-                        className="text-sm font-medium text-red-600 hover:underline"
+                        className="text-sm font-medium text-red-600 hover:underline dark:text-red-400"
                       >
                         Confirmar
                       </button>
                       <button
                         onClick={() => setConfirmingDeleteId(null)}
-                        className="text-sm text-gray-500 hover:underline"
+                        className="text-sm text-gray-500 hover:underline dark:text-gray-400"
                       >
                         Cancelar
                       </button>
@@ -142,13 +146,13 @@ export default function BudgetsPage() {
                     <span className="space-x-3">
                       <button
                         onClick={() => openEditForm(goal)}
-                        className="text-sm text-indigo-600 hover:underline"
+                        className="text-sm text-indigo-600 hover:underline dark:text-indigo-400"
                       >
                         Editar
                       </button>
                       <button
                         onClick={() => setConfirmingDeleteId(goal.id)}
-                        className="text-sm text-red-600 hover:underline"
+                        className="text-sm text-red-600 hover:underline dark:text-red-400"
                       >
                         Excluir
                       </button>

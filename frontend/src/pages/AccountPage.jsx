@@ -33,22 +33,24 @@ export default function AccountPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 p-4 sm:p-8">
+    <main className="min-h-screen bg-gray-50 p-4 sm:p-8 dark:bg-gray-900">
       <div className="mx-auto max-w-4xl">
         <Header />
 
-        <h2 className="mb-6 text-xl font-semibold text-gray-900">Minha conta</h2>
+        <h2 className="mb-6 text-xl font-semibold text-gray-900 dark:text-gray-100">
+          Minha conta
+        </h2>
 
-        <div className="mb-6 rounded-lg bg-white p-5 shadow">
-          <p className="text-sm text-gray-500">Nome</p>
-          <p className="mb-3 text-gray-900">{user?.name}</p>
-          <p className="text-sm text-gray-500">E-mail</p>
-          <p className="text-gray-900">{user?.email}</p>
+        <div className="mb-6 rounded-lg bg-white p-5 shadow dark:bg-gray-800">
+          <p className="text-sm text-gray-500 dark:text-gray-400">Nome</p>
+          <p className="mb-3 text-gray-900 dark:text-gray-100">{user?.name}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">E-mail</p>
+          <p className="text-gray-900 dark:text-gray-100">{user?.email}</p>
         </div>
 
-        <div className="rounded-lg border border-red-200 bg-white p-5 shadow">
-          <h3 className="font-semibold text-red-700">Excluir conta</h3>
-          <p className="mt-1 text-sm text-gray-600">
+        <div className="rounded-lg border border-red-200 bg-white p-5 shadow dark:border-red-900 dark:bg-gray-800">
+          <h3 className="font-semibold text-red-700 dark:text-red-400">Excluir conta</h3>
+          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
             Esta ação é permanente e apaga sua conta e todas as suas transações. Não pode ser
             desfeita.
           </p>
@@ -56,14 +58,17 @@ export default function AccountPage() {
           {!isConfirming ? (
             <button
               onClick={() => setIsConfirming(true)}
-              className="mt-4 rounded-md border border-red-600 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+              className="mt-4 rounded-md border border-red-600 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 dark:border-red-500 dark:text-red-400 dark:hover:bg-red-950"
             >
               Excluir minha conta
             </button>
           ) : (
             <form onSubmit={handleDelete} className="mt-4 space-y-3">
               <div>
-                <label htmlFor="delete-password" className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="delete-password"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
                   Confirme sua senha para continuar
                 </label>
                 <input
@@ -72,11 +77,11 @@ export default function AccountPage() {
                   required
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
-                  className="mt-1 w-full max-w-xs rounded-md border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none"
+                  className="mt-1 w-full max-w-xs rounded-md border border-gray-300 px-3 py-2 focus:border-red-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
                 />
               </div>
 
-              {error && <p className="text-sm text-red-600">{error}</p>}
+              {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
               <div className="flex gap-3">
                 <button
@@ -89,7 +94,7 @@ export default function AccountPage() {
                 <button
                   type="button"
                   onClick={cancelDelete}
-                  className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                  className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
                 >
                   Cancelar
                 </button>

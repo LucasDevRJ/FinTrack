@@ -1,1 +1,7 @@
 @import "tailwindcss";
+
+/* Tailwind v4 defaults dark: to prefers-color-scheme only. This custom
+   variant makes dark: respond to a `.dark` class on <html> instead, so the
+   theme toggle (persisted in localStorage, see ThemeContext) can override
+   the OS preference. */
+@custom-variant dark (&:where(.dark, .dark *));

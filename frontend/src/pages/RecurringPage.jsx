@@ -7,15 +7,22 @@ import {
 } from "../api/recurring.js";
 import Header from "../components/Header.jsx";
 import RecurringTransactionForm from "../components/RecurringTransactionForm.jsx";
+import { useTheme } from "../context/ThemeContext.jsx";
 import { formatCurrency } from "../utils/currency.js";
 import { getErrorMessage } from "../utils/apiError.js";
-import { EXPENSE_COLOR, INCOME_COLOR } from "../utils/transactionColors.js";
+import {
+  EXPENSE_COLOR,
+  EXPENSE_COLOR_DARK,
+  INCOME_COLOR,
+  INCOME_COLOR_DARK,
+} from "../utils/transactionColors.js";
 
 function formatDate(isoDate) {
   return new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" }).format(new Date(isoDate));
 }
 
 export default function RecurringPage() {
+  const { theme } = useTheme();
   const [templates, setTemplates] = useState(null);
   const [loadError, setLoadError] = useState("");
   const [actionError, setActionError] = useState("");
@@ -82,12 +89,14 @@ export default function RecurringPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 p-4 sm:p-8">
+    <main className="min-h-screen bg-gray-50 p-4 sm:p-8 dark:bg-gray-900">
       <div className="mx-auto max-w-4xl">
         <Header />
 
         <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-gray-900">Transações recorrentes</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+            Transações recorrentes
+          </h2>
           {!isFormOpen && (
             <button
               onClick={openCreateForm}
@@ -99,7 +108,7 @@ export default function RecurringPage() {
         </div>
 
         {isFormOpen && (
-          <div className="mb-6 rounded-lg bg-white p-5 shadow">
+          <div className="mb-6 rounded-lg bg-white p-5 shadow dark:bg-gray-800">
             <RecurringTransactionForm
               initialValues={editingTemplate}
               onSubmit={handleSubmit}
@@ -110,13 +119,17 @@ export default function RecurringPage() {
           </div>
         )}
 
-        {loadError && <p className="text-sm text-red-600">{loadError}</p>}
-        {!isFormOpen && actionError && <p className="mb-4 text-sm text-red-600">{actionError}</p>}
+        {loadError && <p className="text-sm text-red-600 dark:text-red-400">{loadError}</p>}
+        {!isFormOpen && actionError && (
+          <p className="mb-4 text-sm text-red-600 dark:text-red-400">{actionError}</p>
+        )}
 
-        {!loadError && !templates && <p className="text-gray-500">Carregando...</p>}
+        {!loadError && !templates && (
+          <p className="text-gray-500 dark:text-gray-400">Carregando...</p>
+        )}
 
         {templates && templates.length === 0 && (
-          <p className="text-gray-500">
+          <p className="text-gray-500 dark:text-gray-400">
             Nenhuma recorrência cadastrada ainda. Cadastre aluguel, assinaturas ou salário para
             gerar a transação automaticamente todo mês, sem precisar recriar o lançamento.
           </p>
@@ -125,19 +138,23 @@ export default function RecurringPage() {
         {templates && templates.length > 0 && (
           <div className="space-y-4">
             {templates.map((template) => (
-              <div key={template.id} className="rounded-lg bg-white p-5 shadow">
+              <div key={template.id} className="rounded-lg bg-white p-5 shadow dark:bg-gray-800">
                 <div className="mb-2 flex items-start justify-between">
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="font-medium text-gray-900">{template.category}</h3>
+                      <h3 className="font-medium text-gray-900 dark:text-gray-100">
+                        {template.category}
+                      </h3>
                       {!template.active && (
-                        <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
+                        <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500 dark:bg-gray-700 dark:text-gray-400">
                           Pausada
                         </span>
                       )}
                     </div>
                     {template.description && (
-                      <p className="text-sm text-gray-500">{template.description}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {template.description}
+                      </p>
                     )}
                   </div>
 
@@ -145,13 +162,13 @@ export default function RecurringPage() {
                     <span className="space-x-3">
                       <button
                         onClick={() => handleDelete(template.id)}
-                        className="text-sm font-medium text-red-600 hover:underline"
+                        className="text-sm font-medium text-red-600 hover:underline dark:text-red-400"
                       >
                         Confirmar
                       </button>
                       <button
                         onClick={() => setConfirmingDeleteId(null)}
-                        className="text-sm text-gray-500 hover:underline"
+                        className="text-sm text-gray-500 hover:underline dark:text-gray-400"
                       >
                         Cancelar
                       </button>
@@ -160,13 +177,13 @@ export default function RecurringPage() {
                     <span className="space-x-3">
                       <button
                         onClick={() => openEditForm(template)}
-                        className="text-sm text-indigo-600 hover:underline"
+                        className="text-sm text-indigo-600 hover:underline dark:text-indigo-400"
                       >
                         Editar
                       </button>
                       <button
                         onClick={() => setConfirmingDeleteId(template.id)}
-                        className="text-sm text-red-600 hover:underline"
+                        className="text-sm text-red-600 hover:underline dark:text-red-400"
                       >
                         Excluir
                       </button>
@@ -175,13 +192,22 @@ export default function RecurringPage() {
                 </div>
 
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     Todo dia {template.dayOfMonth} · desde {formatDate(template.startDate)}
                     {template.endDate && <> · até {formatDate(template.endDate)}</>}
                   </p>
                   <p
                     className="font-medium"
-                    style={{ color: template.type === "INCOME" ? INCOME_COLOR : EXPENSE_COLOR }}
+                    style={{
+                      color:
+                        template.type === "INCOME"
+                          ? theme === "dark"
+                            ? INCOME_COLOR_DARK
+                            : INCOME_COLOR
+                          : theme === "dark"
+                            ? EXPENSE_COLOR_DARK
+                            : EXPENSE_COLOR,
+                    }}
                   >
                     {template.type === "INCOME" ? "+ " : "- "}
                     {formatCurrency(template.amount)}

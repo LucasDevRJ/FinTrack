@@ -34,14 +34,16 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-sm rounded-lg bg-white p-8 shadow">
-        <h1 className="mb-6 text-2xl font-semibold text-gray-900">Criar nova senha</h1>
+    <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4 dark:bg-gray-900">
+      <div className="w-full max-w-sm rounded-lg bg-white p-8 shadow dark:bg-gray-800">
+        <h1 className="mb-6 text-2xl font-semibold text-gray-900 dark:text-gray-100">
+          Criar nova senha
+        </h1>
 
         {!token ? (
-          <p className="text-sm text-red-600">
+          <p className="text-sm text-red-600 dark:text-red-400">
             Link inválido. Solicite um novo link em{" "}
-            <Link to="/forgot-password" className="text-indigo-600 hover:underline">
+            <Link to="/forgot-password" className="text-indigo-600 hover:underline dark:text-indigo-400">
               esqueci minha senha
             </Link>
             .
@@ -49,7 +51,7 @@ export default function ResetPasswordPage() {
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Nova senha
               </label>
               <input
@@ -58,12 +60,12 @@ export default function ResetPasswordPage() {
                 required
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none"
+                className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
               />
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Confirmar nova senha
               </label>
               <input
@@ -72,11 +74,11 @@ export default function ResetPasswordPage() {
                 required
                 value={confirmPassword}
                 onChange={(event) => setConfirmPassword(event.target.value)}
-                className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none"
+                className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
               />
             </div>
 
-            {error && <p className="text-sm text-red-600">{error}</p>}
+            {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
             <button
               type="submit"
@@ -88,8 +90,8 @@ export default function ResetPasswordPage() {
           </form>
         )}
 
-        <p className="mt-4 text-center text-sm text-gray-600">
-          <Link to="/login" className="text-indigo-600 hover:underline">
+        <p className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
+          <Link to="/login" className="text-indigo-600 hover:underline dark:text-indigo-400">
             Voltar para o login
           </Link>
         </p>
