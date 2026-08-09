@@ -10,6 +10,11 @@ export async function loginRequest({ email, password }) {
   return data;
 }
 
+export async function demoLoginRequest() {
+  const { data } = await apiClient.post("/auth/demo-login");
+  return data;
+}
+
 export async function meRequest() {
   const { data } = await apiClient.get("/auth/me");
   return data;

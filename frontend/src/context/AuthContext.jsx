@@ -1,5 +1,11 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { deleteAccountRequest, loginRequest, meRequest, registerRequest } from "../api/auth.js";
+import {
+  deleteAccountRequest,
+  demoLoginRequest,
+  loginRequest,
+  meRequest,
+  registerRequest,
+} from "../api/auth.js";
 
 const AuthContext = createContext(null);
 
@@ -29,6 +35,12 @@ export function AuthProvider({ children }) {
     setUser(user);
   }
 
+  async function loginAsDemo() {
+    const { user, token } = await demoLoginRequest();
+    localStorage.setItem("fintrack_token", token);
+    setUser(user);
+  }
+
   async function register(name, email, password) {
     const { user, token } = await registerRequest({ name, email, password });
     localStorage.setItem("fintrack_token", token);
@@ -46,7 +58,9 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, logout, deleteAccount }}>
+    <AuthContext.Provider
+      value={{ user, isLoading, login, loginAsDemo, register, logout, deleteAccount }}
+    >
       {children}
     </AuthContext.Provider>
   );

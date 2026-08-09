@@ -4,12 +4,13 @@ import { useAuth } from "../context/AuthContext.jsx";
 import { getErrorMessage } from "../utils/apiError.js";
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login, loginAsDemo } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDemoLoading, setIsDemoLoading] = useState(false);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -23,6 +24,19 @@ export default function LoginPage() {
       setError(getErrorMessage(err, "Não foi possível fazer login"));
     } finally {
       setIsSubmitting(false);
+    }
+  }
+
+  async function handleDemoLogin() {
+    setError("");
+    setIsDemoLoading(true);
+    try {
+      await loginAsDemo();
+      navigate("/dashboard");
+    } catch (err) {
+      setError(getErrorMessage(err, "Não foi possível entrar como visitante"));
+    } finally {
+      setIsDemoLoading(false);
     }
   }
 
@@ -70,6 +84,21 @@ export default function LoginPage() {
             {isSubmitting ? "Entrando..." : "Entrar"}
           </button>
         </form>
+
+        <div className="my-4 flex items-center gap-3">
+          <div className="h-px flex-1 bg-gray-200" />
+          <span className="text-xs text-gray-400">ou</span>
+          <div className="h-px flex-1 bg-gray-200" />
+        </div>
+
+        <button
+          type="button"
+          onClick={handleDemoLogin}
+          disabled={isDemoLoading}
+          className="w-full rounded-md border border-gray-300 py-2 font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+        >
+          {isDemoLoading ? "Entrando..." : "Entrar como visitante"}
+        </button>
 
         <p className="mt-4 text-center text-sm text-gray-600">
           <Link to="/forgot-password" className="text-indigo-600 hover:underline">
