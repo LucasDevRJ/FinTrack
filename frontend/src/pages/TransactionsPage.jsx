@@ -129,11 +129,11 @@ export default function TransactionsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 p-8">
+    <main className="min-h-screen bg-gray-50 p-4 sm:p-8">
       <div className="mx-auto max-w-4xl">
         <Header />
 
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-xl font-semibold text-gray-900">Transações</h2>
           {!isFormOpen && (
             <div className="flex gap-3">
@@ -253,8 +253,11 @@ export default function TransactionsPage() {
         )}
 
         {transactions && transactions.length > 0 && (
-          <div className="overflow-hidden rounded-lg bg-white shadow">
-            <table className="w-full text-sm">
+          // overflow-x-auto (not overflow-hidden) so the 5-column table
+          // scrolls horizontally on narrow screens instead of clipping
+          // columns that don't fit.
+          <div className="overflow-x-auto rounded-lg bg-white shadow">
+            <table className="w-full min-w-[640px] text-sm">
               <thead className="border-b border-gray-200 text-left text-gray-500">
                 <tr>
                   <th className="px-4 py-3 font-medium">Data</th>
@@ -325,7 +328,7 @@ export default function TransactionsPage() {
         )}
 
         {pagination && pagination.total > 0 && (
-          <div className="mt-4 flex items-center justify-between text-sm text-gray-600">
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-sm text-gray-600">
             <p>
               {pagination.total} transaç{pagination.total === 1 ? "ão" : "ões"} · página{" "}
               {pagination.page} de {pagination.totalPages}

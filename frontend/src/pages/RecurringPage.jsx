@@ -81,7 +81,7 @@ export default function RecurringPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 p-8">
+    <main className="min-h-screen bg-gray-50 p-4 sm:p-8">
       <div className="mx-auto max-w-4xl">
         <Header />
 
@@ -173,7 +173,7 @@ export default function RecurringPage() {
                   )}
                 </div>
 
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="text-sm text-gray-500">
                     Todo dia {template.dayOfMonth} · desde {formatDate(template.startDate)}
                     {template.endDate && <> · até {formatDate(template.endDate)}</>}

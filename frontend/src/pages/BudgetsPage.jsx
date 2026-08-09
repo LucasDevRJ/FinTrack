@@ -76,7 +76,7 @@ export default function BudgetsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 p-8">
+    <main className="min-h-screen bg-gray-50 p-4 sm:p-8">
       <div className="mx-auto max-w-4xl">
         <Header />
 
