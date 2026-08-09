@@ -10,7 +10,11 @@ export async function listTransactionsRequest(filters = {}) {
   if (filters.startDate) params.startDate = filters.startDate;
   if (filters.endDate) params.endDate = filters.endDate;
   if (filters.category) params.category = filters.category;
+  if (filters.q) params.q = filters.q;
+  if (filters.page) params.page = filters.page;
 
+  // { data, pagination } — the backend paginates this endpoint (unlike
+  // /export below, which always returns every matching row).
   const { data } = await apiClient.get("/transactions", { params });
   return data;
 }
@@ -25,6 +29,7 @@ export async function exportTransactionsRequest(filters = {}) {
   if (filters.startDate) params.startDate = filters.startDate;
   if (filters.endDate) params.endDate = filters.endDate;
   if (filters.category) params.category = filters.category;
+  if (filters.q) params.q = filters.q;
 
   const response = await apiClient.get("/transactions/export", {
     params,

@@ -15,10 +15,11 @@ function formatDate(isoDate) {
   return new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" }).format(new Date(isoDate));
 }
 
-const EMPTY_FILTERS = { startDate: "", endDate: "", category: "" };
+const EMPTY_FILTERS = { startDate: "", endDate: "", category: "", q: "" };
 
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState(null);
+  const [pagination, setPagination] = useState(null);
   const [loadError, setLoadError] = useState("");
   const [actionError, setActionError] = useState("");
   const [editingTransaction, setEditingTransaction] = useState(null);
@@ -27,27 +28,33 @@ export default function TransactionsPage() {
   const [confirmingDeleteId, setConfirmingDeleteId] = useState(null);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [appliedFilters, setAppliedFilters] = useState(EMPTY_FILTERS);
+  const [page, setPage] = useState(1);
   const [isExporting, setIsExporting] = useState(false);
   const [exportError, setExportError] = useState("");
 
-  function loadTransactions(activeFilters) {
-    return listTransactionsRequest(activeFilters)
-      .then(setTransactions)
+  function loadTransactions(activeFilters, activePage) {
+    return listTransactionsRequest({ ...activeFilters, page: activePage })
+      .then(({ data, pagination: meta }) => {
+        setTransactions(data);
+        setPagination(meta);
+      })
       .catch(() => setLoadError("Não foi possível carregar as transações"));
   }
 
   useEffect(() => {
-    loadTransactions(appliedFilters);
-  }, [appliedFilters]);
+    loadTransactions(appliedFilters, page);
+  }, [appliedFilters, page]);
 
   function handleFilterSubmit(event) {
     event.preventDefault();
     setAppliedFilters(filters);
+    setPage(1);
   }
 
   function handleClearFilters() {
     setFilters(EMPTY_FILTERS);
     setAppliedFilters(EMPTY_FILTERS);
+    setPage(1);
   }
 
   async function handleExport() {
@@ -65,7 +72,7 @@ export default function TransactionsPage() {
   }
 
   const hasActiveFilters = Boolean(
-    appliedFilters.startDate || appliedFilters.endDate || appliedFilters.category
+    appliedFilters.startDate || appliedFilters.endDate || appliedFilters.category || appliedFilters.q
   );
 
   function openCreateForm() {
@@ -94,7 +101,7 @@ export default function TransactionsPage() {
       } else {
         await createTransactionRequest(values);
       }
-      await loadTransactions(appliedFilters);
+      await loadTransactions(appliedFilters, page);
       closeForm();
     } catch (err) {
       setActionError(err.response?.data?.message ?? "Não foi possível salvar a transação");
@@ -107,7 +114,13 @@ export default function TransactionsPage() {
     setActionError("");
     try {
       await deleteTransactionRequest(id);
-      await loadTransactions(appliedFilters);
+      // Deleting the last row on a page beyond the first would otherwise
+      // leave the user staring at an empty page — step back one page in
+      // that case instead of reloading the now-empty one.
+      const isLastRowOnPage = transactions?.length === 1 && page > 1;
+      const targetPage = isLastRowOnPage ? page - 1 : page;
+      if (isLastRowOnPage) setPage(targetPage);
+      else await loadTransactions(appliedFilters, targetPage);
     } catch {
       setActionError("Não foi possível excluir a transação");
     } finally {
@@ -193,6 +206,20 @@ export default function TransactionsPage() {
               type="text"
               value={filters.category}
               onChange={(event) => setFilters((f) => ({ ...f, category: event.target.value }))}
+              className="mt-1 rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="filter-q" className="block text-sm font-medium text-gray-700">
+              Buscar
+            </label>
+            <input
+              id="filter-q"
+              type="text"
+              placeholder="Descrição ou categoria"
+              value={filters.q}
+              onChange={(event) => setFilters((f) => ({ ...f, q: event.target.value }))}
               className="mt-1 rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none"
             />
           </div>
@@ -294,6 +321,33 @@ export default function TransactionsPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {pagination && pagination.total > 0 && (
+          <div className="mt-4 flex items-center justify-between text-sm text-gray-600">
+            <p>
+              {pagination.total} transaç{pagination.total === 1 ? "ão" : "ões"} · página{" "}
+              {pagination.page} de {pagination.totalPages}
+            </p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setPage((p) => p - 1)}
+                disabled={pagination.page <= 1}
+                className="rounded-md border border-gray-300 px-3 py-1.5 font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Anterior
+              </button>
+              <button
+                type="button"
+                onClick={() => setPage((p) => p + 1)}
+                disabled={pagination.page >= pagination.totalPages}
+                className="rounded-md border border-gray-300 px-3 py-1.5 font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Próxima
+              </button>
+            </div>
           </div>
         )}
       </div>
