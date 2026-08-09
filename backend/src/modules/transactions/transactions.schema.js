@@ -31,6 +31,22 @@ export const listTransactionsQuerySchema = z
     startDate: z.coerce.date({ invalid_type_error: "Data inicial inválida" }).optional(),
     endDate: z.coerce.date({ invalid_type_error: "Data final inválida" }).optional(),
     category: z.string().trim().min(1).max(50).optional(),
+    // Free-text search across description + category, separate from the
+    // exact/partial `category` filter above so both can be used together
+    // (e.g. category=Mercado narrowed further by q="ifood").
+    q: z.string().trim().min(1).max(100).optional(),
+    // Only meaningful for the list endpoint — exportTransactionsCsv ignores
+    // these since a CSV export should always contain every matching row,
+    // not just one page. Defaulted here so the controller/service never has
+    // to special-case "page not provided".
+    page: z.coerce.number().int().min(1, "Página deve ser maior ou igual a 1").optional().default(1),
+    pageSize: z.coerce
+      .number()
+      .int()
+      .min(1, "Itens por página deve ser maior ou igual a 1")
+      .max(100, "Itens por página deve ser no máximo 100")
+      .optional()
+      .default(20),
   })
   .refine((data) => !data.startDate || !data.endDate || data.startDate <= data.endDate, {
     message: "Data inicial deve ser anterior ou igual à data final",

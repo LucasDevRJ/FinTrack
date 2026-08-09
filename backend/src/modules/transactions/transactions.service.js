@@ -26,12 +26,12 @@ export async function createTransaction(userId, data) {
   return serializeTransaction(transaction);
 }
 
-export async function listTransactions(userId, filters = {}) {
-  // Materialize any past-due recurring occurrences first, so the list (and
-  // exportTransactionsCsv, which calls this) always reflects them without
-  // the user having to wait for a scheduled job.
-  await generateDueRecurringTransactions(userId);
-
+// Shared by listTransactions and exportTransactionsCsv so both respect the
+// exact same startDate/endDate/category/q filters. `category` stays a
+// separate exact-ish filter (used by the dedicated category dropdown/input)
+// while `q` is a free-text search across description + category — both can
+// be applied together since they're independent `where` conditions.
+function buildTransactionWhere(userId, filters) {
   const where = { userId };
 
   if (filters.category) {
@@ -44,25 +44,71 @@ export async function listTransactions(userId, filters = {}) {
     if (filters.endDate) where.date.lte = filters.endDate;
   }
 
-  const transactions = await prisma.transaction.findMany({
-    where,
-    orderBy: { date: "desc" },
-  });
-  return transactions.map(serializeTransaction);
+  if (filters.q) {
+    where.OR = [
+      { description: { contains: filters.q, mode: "insensitive" } },
+      { category: { contains: filters.q, mode: "insensitive" } },
+    ];
+  }
+
+  return where;
+}
+
+const DEFAULT_PAGE = 1;
+const DEFAULT_PAGE_SIZE = 20;
+
+export async function listTransactions(userId, filters = {}) {
+  // Materialize any past-due recurring occurrences first, so the list
+  // always reflects them without the user having to wait for a scheduled
+  // job.
+  await generateDueRecurringTransactions(userId);
+
+  const where = buildTransactionWhere(userId, filters);
+  const page = filters.page ?? DEFAULT_PAGE;
+  const pageSize = filters.pageSize ?? DEFAULT_PAGE_SIZE;
+
+  // count + findMany run in parallel rather than one after the other — they
+  // don't depend on each other, and the total is only needed for the
+  // pagination metadata, not to fetch the rows themselves.
+  const [total, transactions] = await Promise.all([
+    prisma.transaction.count({ where }),
+    prisma.transaction.findMany({
+      where,
+      orderBy: { date: "desc" },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+  ]);
+
+  return {
+    data: transactions.map(serializeTransaction),
+    pagination: {
+      page,
+      pageSize,
+      total,
+      totalPages: Math.max(1, Math.ceil(total / pageSize)),
+    },
+  };
 }
 
 const TYPE_LABELS = { INCOME: "Receita", EXPENSE: "Despesa" };
 const CSV_HEADERS = ["Data", "Tipo", "Categoria", "Descrição", "Valor"];
 
-// Reuses listTransactions so the export respects the exact same
-// startDate/endDate/category filters as the on-screen list. `date` is
-// re-sliced to YYYY-MM-DD via the UTC getters (not toLocaleDateString) for
-// the same timezone-safety reason as buildMonthlyBreakdown below — the
+// Reuses buildTransactionWhere so the export respects the exact same
+// startDate/endDate/category/q filters as the on-screen list — but fetches
+// every matching row unpaginated (page/pageSize from filters are ignored
+// here), since a CSV export should never be truncated to one page. `date`
+// is re-sliced to YYYY-MM-DD via the UTC getters (not toLocaleDateString)
+// for the same timezone-safety reason as buildMonthlyBreakdown below — the
 // stored instant is always UTC midnight for a calendar date. Amount uses a
 // comma decimal separator to match the ";" delimiter convention used by
 // Brazilian-locale spreadsheet apps.
 export async function exportTransactionsCsv(userId, filters = {}) {
-  const transactions = await listTransactions(userId, filters);
+  await generateDueRecurringTransactions(userId);
+  const where = buildTransactionWhere(userId, filters);
+  const transactions = (
+    await prisma.transaction.findMany({ where, orderBy: { date: "desc" } })
+  ).map(serializeTransaction);
 
   const rows = transactions.map((transaction) => {
     const date = new Date(transaction.date);
