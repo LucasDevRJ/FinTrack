@@ -18,6 +18,15 @@ export async function login(req, res, next) {
   }
 }
 
+export async function demoLogin(req, res, next) {
+  try {
+    const result = await authService.loginAsDemo();
+    res.status(200).json(result);
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function me(req, res, next) {
   try {
     const user = await authService.getUserById(req.userId);
