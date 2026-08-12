@@ -1,5 +1,7 @@
 # FinTrack
 
+[![E2E Tests](https://github.com/LucasDevRJ/FinTrack/actions/workflows/e2e.yml/badge.svg)](https://github.com/LucasDevRJ/FinTrack/actions/workflows/e2e.yml)
+
 Gerenciador de finanças pessoais full-stack — controle de receitas e despesas, metas de orçamento por categoria, transações recorrentes, gráficos e exportação de dados. Construído como projeto de portfólio, com padrão de qualidade de produção (deploy real, testes automatizados, histórico de commits/PRs organizado).
 
 **🔗 Demo ao vivo:** [www.myfintrack.com.br](https://www.myfintrack.com.br)
