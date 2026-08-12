@@ -7,6 +7,7 @@ import { sendPasswordResetEmail } from "../../utils/mailer.js";
 
 const SALT_ROUNDS = 10;
 const RESET_TOKEN_TTL_MS = 30 * 60 * 1000;
+const DEMO_EMAIL = "demo@fintrack.app";
 
 function hashToken(token) {
   return crypto.createHash("sha256").update(token).digest("hex");
@@ -56,6 +57,17 @@ export async function deleteUserAccount(id, password) {
   const user = await prisma.user.findUnique({ where: { id } });
   if (!user) throw new AppError("Usuário não encontrado", 404);
 
+  // Refuse by email regardless of password — this used to be blocked only
+  // incidentally (the demo account's real password is a random value never
+  // exposed anywhere, so it would always fail the check below), but a
+  // silently-failing delete button looks like a bug to a portfolio
+  // evaluator. This makes the guard explicit and intentional (see issue
+  // #13); the frontend also hides account-management UI entirely for this
+  // account (see frontend/src/utils/demo.js).
+  if (user.email === DEMO_EMAIL) {
+    throw new AppError("A conta de demonstração pública não pode ser excluída", 403);
+  }
+
   const passwordMatches = await bcrypt.compare(password, user.password);
   if (!passwordMatches) throw new AppError("Senha incorreta", 401);
 
@@ -63,7 +75,6 @@ export async function deleteUserAccount(id, password) {
   await prisma.user.delete({ where: { id } });
 }
 
-const DEMO_EMAIL = "demo@fintrack.app";
 const DEMO_NAME = "Visitante Demo";
 
 // Re-seeding wipes and rewrites this user's data on every call (see

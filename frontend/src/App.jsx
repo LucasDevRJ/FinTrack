@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from "react-router";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import { useAuth } from "./context/AuthContext.jsx";
 import AccountPage from "./pages/AccountPage.jsx";
 import BudgetsPage from "./pages/BudgetsPage.jsx";
 import DashboardPage from "./pages/DashboardPage.jsx";
@@ -9,6 +10,20 @@ import RecurringPage from "./pages/RecurringPage.jsx";
 import RegisterPage from "./pages/RegisterPage.jsx";
 import ResetPasswordPage from "./pages/ResetPasswordPage.jsx";
 import TransactionsPage from "./pages/TransactionsPage.jsx";
+import { isDemoUser } from "./utils/demo.js";
+
+// "Minha conta" doesn't make sense for the shared public demo account (see
+// issue #13) — bounce direct /account navigation back to the dashboard
+// instead of rendering personal-looking info and a delete button that
+// isn't meant to work for it. Nested inside ProtectedRoute, so `user` is
+// already guaranteed to be loaded here.
+function AccountRoute() {
+  const { user } = useAuth();
+  if (isDemoUser(user)) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  return <AccountPage />;
+}
 
 export default function App() {
   return (
@@ -53,7 +68,7 @@ export default function App() {
         path="/account"
         element={
           <ProtectedRoute>
-            <AccountPage />
+            <AccountRoute />
           </ProtectedRoute>
         }
       />
