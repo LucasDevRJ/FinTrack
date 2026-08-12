@@ -2,6 +2,7 @@ import { useState } from "react";
 import { NavLink } from "react-router";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useTheme } from "../context/ThemeContext.jsx";
+import { isDemoUser } from "../utils/demo.js";
 
 function navLinkClass({ isActive }) {
   return `text-sm font-medium ${
@@ -57,6 +58,12 @@ function ThemeToggleButton({ className = "" }) {
 export default function Header() {
   const { user, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  // The demo account is shared/public — "Minha conta" would show a real
+  // visitor's personal-looking info and a delete button that isn't meant
+  // to work for it (see issue #13).
+  const navItems = isDemoUser(user)
+    ? NAV_ITEMS.filter((item) => item.to !== "/account")
+    : NAV_ITEMS;
 
   return (
     <div className="mb-8">
@@ -67,7 +74,7 @@ export default function Header() {
 
         <div className="hidden items-center gap-6 md:flex">
           <nav className="flex gap-4">
-            {NAV_ITEMS.map((item) => (
+            {navItems.map((item) => (
               <NavLink key={item.to} to={item.to} className={navLinkClass}>
                 {item.label}
               </NavLink>
@@ -104,7 +111,7 @@ export default function Header() {
       {isMenuOpen && (
         <div className="mt-4 flex flex-col gap-3 border-t border-gray-200 pt-4 dark:border-gray-700 md:hidden">
           <nav className="flex flex-col gap-3">
-            {NAV_ITEMS.map((item) => (
+            {navItems.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
