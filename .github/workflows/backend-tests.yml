@@ -1,0 +1,60 @@
+name: Backend unit & integration tests
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: fintrack
+          POSTGRES_PASSWORD: fintrack
+          POSTGRES_DB: fintrack_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U fintrack"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://fintrack:fintrack@localhost:5432/fintrack_test?schema=public
+      JWT_SECRET: ci-only-secret-not-used-in-production
+      JWT_EXPIRES_IN: 1d
+      PORT: 3334
+      CORS_ORIGIN: http://localhost:5173
+      # No real Resend key in CI — nothing in this suite sends e-mail, this
+      # just needs to exist so the client can be instantiated.
+      RESEND_API_KEY: re_dummy_ci_key
+      EMAIL_FROM: "FinTrack <onboarding@resend.dev>"
+      FRONTEND_URL: http://localhost:5173
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install backend dependencies
+        run: npm ci
+        working-directory: backend
+
+      - name: Run database migrations
+        run: npx prisma migrate deploy
+        working-directory: backend
+
+      - name: Run unit + integration tests
+        run: npm test
+        working-directory: backend
