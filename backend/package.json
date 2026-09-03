@@ -17,7 +17,8 @@
     "test:watch": "vitest",
     "test:unit": "vitest run tests/unit",
     "test:integration": "vitest run tests/integration",
-    "test:db:setup": "dotenv -e .env.test -- prisma migrate deploy"
+    "test:db:setup": "dotenv -e .env.test -- prisma migrate deploy",
+    "user:delete": "node scripts/delete-user.js"
   },
   "dependencies": {
     "@prisma/client": "^6.1.0",
