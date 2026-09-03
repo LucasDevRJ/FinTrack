@@ -1,6 +1,7 @@
 # FinTrack
 
 [![E2E Tests](https://github.com/LucasDevRJ/FinTrack/actions/workflows/e2e.yml/badge.svg)](https://github.com/LucasDevRJ/FinTrack/actions/workflows/e2e.yml)
+[![Backend Tests](https://github.com/LucasDevRJ/FinTrack/actions/workflows/backend-tests.yml/badge.svg)](https://github.com/LucasDevRJ/FinTrack/actions/workflows/backend-tests.yml)
 
 Gerenciador de finanças pessoais full-stack — controle de receitas e despesas, metas de orçamento por categoria, transações recorrentes, gráficos e exportação de dados. Construído como projeto de portfólio, com padrão de qualidade de produção (deploy real, testes automatizados, histórico de commits/PRs organizado).
 
@@ -30,12 +31,21 @@ Clique em **"Entrar como visitante"** na tela de login para explorar o app com d
 | Banco de dados | PostgreSQL + Prisma ORM |
 | Autenticação | JWT (Bearer token) |
 | E-mail transacional | Resend |
-| Testes | Playwright (E2E) |
+| Testes | Playwright (E2E), Vitest (unitários) + Supertest (integração) |
 | Deploy | Vercel (frontend) + Railway (backend + Postgres) |
 
 ## Testes
 
-Suíte E2E com [Playwright](e2e/) cobrindo os fluxos críticos ponta a ponta (autenticação, CRUD de transações, metas de orçamento) contra o frontend, backend e banco reais. Ver [`e2e/README.md`](e2e/README.md) para instruções de execução.
+- **E2E** com [Playwright](e2e/), cobrindo os fluxos críticos ponta a ponta (autenticação, CRUD de transações, metas de orçamento) contra o frontend, backend e banco reais. Ver [`e2e/README.md`](e2e/README.md) para instruções de execução.
+- **Unitários e de integração** no backend com [Vitest](backend/tests/) — unitários na camada de service (geração de transações recorrentes, cálculo de progresso das metas, validação Zod) sem tocar o banco, e integração com [Supertest](https://github.com/ladjs/supertest) batendo nas rotas reais contra um banco de teste dedicado (`fintrack_test`). Para rodar localmente:
+  ```bash
+  cd backend
+  cp .env.example .env.test   # ajuste DATABASE_URL para apontar pro banco de teste
+  npm run test:db:setup       # aplica as migrations no banco de teste
+  npm test                    # unitários + integração
+  ```
+
+Ambas as suítes rodam automaticamente via GitHub Actions em todo PR/push para `main` (badges no topo).
 
 ## Rodando localmente
 
