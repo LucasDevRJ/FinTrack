@@ -73,7 +73,7 @@ function resolveOccurrenceDate(year, monthIndex, dayOfMonth) {
 // an optional endDate. Mirrors the UTC-month-bucket approach used throughout
 // transactions.service.js to avoid the timezone bucketing bug described
 // there.
-function dueOccurrencesForTemplate(template, todayUtc) {
+export function dueOccurrencesForTemplate(template, todayUtc) {
   const occurrences = [];
 
   const start = new Date(template.startDate);

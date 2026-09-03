@@ -64,6 +64,16 @@ function getCurrentMonthRange() {
   return { start, end };
 }
 
+// Pure percentage/remaining math, pulled out of listBudgetGoalsWithProgress
+// so it can be unit-tested directly without touching the DB. monthlyLimit
+// <= 0 shouldn't happen (moneyAmountSchema enforces a positive value at
+// creation), but percentage still guards against a divide-by-zero rather
+// than trusting that invariant blindly.
+export function calculateGoalProgress(monthlyLimit, spent) {
+  const percentage = monthlyLimit > 0 ? (spent / monthlyLimit) * 100 : 0;
+  return { spent, remaining: monthlyLimit - spent, percentage };
+}
+
 // Each goal's progress against the *current* calendar month's spending in
 // its category — monthlyLimit is a recurring cap, not tied to one specific
 // month, so "this month's total" is recomputed fresh on every read rather
@@ -93,15 +103,7 @@ export async function listBudgetGoalsWithProgress(userId) {
   return goals.map((goal) => {
     const monthlyLimit = Number(goal.monthlyLimit);
     const spent = spentByCategory.get(goal.category.toLowerCase()) ?? 0;
-    const percentage = monthlyLimit > 0 ? (spent / monthlyLimit) * 100 : 0;
 
-    return {
-      id: goal.id,
-      category: goal.category,
-      monthlyLimit,
-      spent,
-      remaining: monthlyLimit - spent,
-      percentage,
-    };
+    return { id: goal.id, category: goal.category, monthlyLimit, ...calculateGoalProgress(monthlyLimit, spent) };
   });
 }
