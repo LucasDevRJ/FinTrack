@@ -27,6 +27,12 @@ export function createAuthLimiter(overrides = {}) {
     standardHeaders: true,
     legacyHeaders: false,
     handler,
+    // A successful request (2xx/3xx) doesn't count against the quota — only
+    // failed attempts should. Without this, users behind a shared IP (office
+    // NAT, mobile carrier) could get locked out of auth entirely just from
+    // normal successful logins, including out of password recovery, which
+    // is exactly what a genuinely locked-out user needs.
+    skipSuccessfulRequests: true,
     ...overrides,
   });
 }
