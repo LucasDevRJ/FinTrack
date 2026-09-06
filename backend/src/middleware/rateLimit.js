@@ -3,6 +3,20 @@ import rateLimit from "express-rate-limit";
 const WINDOW_MS = 15 * 60 * 1000;
 const LIMIT = 10;
 
+// Tells the client how many minutes are actually left instead of the vague
+// "alguns minutos" — req.rateLimit.resetTime is set by express-rate-limit
+// itself (see its RateLimitInfo type), no extra bookkeeping needed here.
+function handler(req, res) {
+  const resetTime = req.rateLimit?.resetTime;
+  const minutes = resetTime ? Math.max(1, Math.ceil((resetTime.getTime() - Date.now()) / 60_000)) : null;
+
+  res.status(429).json({
+    message: minutes
+      ? `Muitas tentativas. Tente novamente em ${minutes} minuto${minutes === 1 ? "" : "s"}.`
+      : "Muitas tentativas. Tente novamente em alguns minutos.",
+  });
+}
+
 // Factory (rather than a single pre-built instance) so tests can build an
 // unskipped limiter with a lower `limit`, instead of firing 10+ real
 // requests to exercise the 429 path.
@@ -12,7 +26,7 @@ export function createAuthLimiter(overrides = {}) {
     limit: LIMIT,
     standardHeaders: true,
     legacyHeaders: false,
-    message: { message: "Muitas tentativas. Tente novamente em alguns minutos." },
+    handler,
     ...overrides,
   });
 }
