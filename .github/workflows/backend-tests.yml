@@ -27,6 +27,10 @@ jobs:
           --health-retries 10
 
     env:
+      # Set explicitly (rather than relying on Vitest's implicit default) since
+      # src/middleware/rateLimit.js checks this to disable the auth rate limiter
+      # during tests.
+      NODE_ENV: test
       DATABASE_URL: postgresql://fintrack:fintrack@localhost:5432/fintrack_test?schema=public
       JWT_SECRET: ci-only-secret-not-used-in-production
       JWT_EXPIRES_IN: 1d
