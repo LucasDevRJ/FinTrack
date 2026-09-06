@@ -15,7 +15,7 @@ const router = Router();
 
 router.post("/register", authLimiter, validate(registerSchema), authController.register);
 router.post("/login", authLimiter, validate(loginSchema), authController.login);
-router.post("/demo-login", authController.demoLogin);
+router.post("/demo-login", authLimiter, authController.demoLogin);
 router.get("/me", protect, authController.me);
 router.delete("/me", protect, validate(deleteAccountSchema), authController.deleteAccount);
 router.post(
