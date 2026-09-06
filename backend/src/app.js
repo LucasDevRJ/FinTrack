@@ -10,6 +10,11 @@ import transactionsRoutes from "./modules/transactions/transactions.routes.js";
 
 const app = express();
 
+// Railway sits behind a reverse proxy, so without this Express (and therefore
+// express-rate-limit) sees the proxy's IP for every request instead of the
+// client's real one — the rate limiter would then key off a single shared IP.
+app.set("trust proxy", 1);
+
 app.use(helmet());
 // exposedHeaders lets the frontend read Content-Disposition off the CSV
 // export response — browsers hide response headers from JS by default
