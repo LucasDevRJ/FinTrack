@@ -121,12 +121,12 @@ export default function LandingPage() {
           <img
             src="/screenshots/transactions.jpg"
             alt="Lista de transações com filtros de período e categoria"
-            className="w-full rounded-lg shadow-lg"
+            className="aspect-[1366/633] w-full rounded-lg object-cover object-top shadow-lg"
           />
           <img
             src="/screenshots/budgets.jpg"
             alt="Metas de orçamento com barras de progresso por categoria"
-            className="w-full rounded-lg shadow-lg"
+            className="aspect-[1366/633] w-full rounded-lg object-cover object-top shadow-lg"
           />
         </div>
       </section>
