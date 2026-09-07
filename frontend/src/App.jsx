@@ -5,6 +5,7 @@ import AccountPage from "./pages/AccountPage.jsx";
 import BudgetsPage from "./pages/BudgetsPage.jsx";
 import DashboardPage from "./pages/DashboardPage.jsx";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage.jsx";
+import LandingPage from "./pages/LandingPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import RecurringPage from "./pages/RecurringPage.jsx";
 import RegisterPage from "./pages/RegisterPage.jsx";
@@ -28,6 +29,7 @@ function AccountRoute() {
 export default function App() {
   return (
     <Routes>
+      <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
