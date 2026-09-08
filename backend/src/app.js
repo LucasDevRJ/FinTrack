@@ -20,7 +20,11 @@ app.use(helmet());
 // export response — browsers hide response headers from JS by default
 // unless the server explicitly allow-lists them via CORS.
 app.use(cors({ origin: process.env.CORS_ORIGIN, exposedHeaders: ["Content-Disposition"] }));
-app.use(express.json());
+// Default 100kb is plenty for every other endpoint, but a CSV import's
+// content sits in a JSON string field (JSON-escaped, so bigger than the raw
+// file) and can hold up to MAX_IMPORT_ROWS rows — 2mb keeps that comfortably
+// under the limit without opening the door to arbitrarily large bodies.
+app.use(express.json({ limit: "2mb" }));
 
 if (process.env.NODE_ENV !== "production") {
   app.use(morgan("dev"));

@@ -51,6 +51,17 @@ export async function exportTransactionsRequest(filters = {}) {
   URL.revokeObjectURL(url);
 }
 
+// Reads the File client-side and posts its text content as JSON, mirroring
+// exportTransactionsRequest's choice to go through the same axios instance
+// (Bearer token, not a cookie) rather than a raw <input type="file"> form
+// post — and sidesteps adding a multipart dependency on the backend for
+// what's ultimately just a text file.
+export async function importTransactionsRequest(file) {
+  const csv = await file.text();
+  const { data } = await apiClient.post("/transactions/import", { csv });
+  return data;
+}
+
 export async function createTransactionRequest(payload) {
   const { data } = await apiClient.post("/transactions", payload);
   return data;

@@ -5,6 +5,7 @@ import * as transactionsController from "./transactions.controller.js";
 import {
   createTransactionSchema,
   idParamSchema,
+  importTransactionsSchema,
   listTransactionsQuerySchema,
   updateTransactionSchema,
 } from "./transactions.schema.js";
@@ -24,6 +25,11 @@ router.get(
   "/export",
   validate(listTransactionsQuerySchema, "query"),
   transactionsController.exportCsv
+);
+router.post(
+  "/import",
+  validate(importTransactionsSchema),
+  transactionsController.importCsv
 );
 router.get("/:id", validate(idParamSchema, "params"), transactionsController.getOne);
 router.patch(

@@ -1,7 +1,8 @@
 import prisma from "../../lib/prisma.js";
 import { generateDueRecurringTransactions } from "../recurring/recurring.service.js";
 import { AppError } from "../../utils/AppError.js";
-import { toCsv } from "../../utils/csv.js";
+import { parseCsv, toCsv } from "../../utils/csv.js";
+import { createTransactionSchema } from "./transactions.schema.js";
 
 // Prisma returns `amount` as a Decimal instance (precise for DB math), but
 // the API just needs to hand it to the frontend for display — a plain
@@ -123,6 +124,96 @@ export async function exportTransactionsCsv(userId, filters = {}) {
   });
 
   return toCsv(CSV_HEADERS, rows);
+}
+
+// Sanity cap on rows per import — this isn't a bulk-loading endpoint, it's
+// meant for a person's own exported/spreadsheet-edited history, and a huge
+// file is more likely a mistake (or someone else's export) than a real use
+// case worth optimizing for.
+const MAX_IMPORT_ROWS = 1000;
+
+const REVERSE_TYPE_LABELS = Object.fromEntries(
+  Object.entries(TYPE_LABELS).map(([type, label]) => [label.toLowerCase(), type])
+);
+
+// Accepts both what our own export produces ("Receita"/"Despesa") and the
+// raw enum values ("INCOME"/"EXPENSE"), case-insensitively — a user who
+// tweaks the file by hand is more likely to type the enum than reproduce
+// the accented label exactly.
+function parseImportType(raw) {
+  const trimmed = raw.trim();
+  const upper = trimmed.toUpperCase();
+  if (upper === "INCOME" || upper === "EXPENSE") return upper;
+  return REVERSE_TYPE_LABELS[trimmed.toLowerCase()] ?? trimmed;
+}
+
+// Mirrors the comma-decimal convention exportTransactionsCsv writes
+// ("99,90"), while also tolerating a plain dot ("99.90") for a file that
+// started life elsewhere. A "." is only treated as a thousands separator
+// when a comma is also present (Brazilian "1.234,56"); a lone "1234.56"
+// is read as-is.
+function parseImportAmount(raw) {
+  const trimmed = raw.trim();
+  if (trimmed.includes(",")) {
+    return Number(trimmed.replace(/\./g, "").replace(",", "."));
+  }
+  return Number(trimmed);
+}
+
+function parseImportRow(columns) {
+  const [date, type, category, description, amount] = columns;
+  return {
+    type: parseImportType(type ?? ""),
+    amount: parseImportAmount(amount ?? ""),
+    category: (category ?? "").trim(),
+    date: (date ?? "").trim(),
+    description: (description ?? "").trim() || undefined,
+  };
+}
+
+// Row-by-row rather than all-or-nothing: a typo in one line of a 200-line
+// spreadsheet shouldn't force a user to fix it and re-upload from scratch,
+// so every well-formed row is imported and the rest are reported back by
+// line number for the user to fix and (if they want) re-import separately.
+export async function importTransactionsFromCsv(userId, csvText) {
+  const allRows = parseCsv(csvText);
+  if (allRows.length === 0) {
+    throw new AppError("Arquivo CSV vazio", 400);
+  }
+
+  // First row is assumed to be a header and always skipped — matching what
+  // /transactions/export produces — rather than sniffed for exact column
+  // names, so a renamed/reordered header doesn't get rejected outright.
+  const dataRows = allRows.slice(1);
+  if (dataRows.length > MAX_IMPORT_ROWS) {
+    throw new AppError(`Máximo de ${MAX_IMPORT_ROWS} linhas por importação`, 400);
+  }
+
+  const valid = [];
+  const errors = [];
+
+  dataRows.forEach((columns, index) => {
+    const line = index + 2; // +1 for the header row, +1 for 1-based line numbers
+
+    if (columns.length < 5) {
+      errors.push({ line, message: "Número de colunas inválido" });
+      return;
+    }
+
+    const result = createTransactionSchema.safeParse(parseImportRow(columns));
+    if (!result.success) {
+      errors.push({ line, message: result.error.issues[0]?.message ?? "Linha inválida" });
+      return;
+    }
+
+    valid.push({ ...result.data, userId });
+  });
+
+  if (valid.length > 0) {
+    await prisma.transaction.createMany({ data: valid });
+  }
+
+  return { imported: valid.length, failed: errors.length, errors };
 }
 
 export async function getTransactionById(userId, id) {

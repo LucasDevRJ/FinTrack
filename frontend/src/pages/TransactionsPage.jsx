@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   createTransactionRequest,
   deleteTransactionRequest,
   exportTransactionsRequest,
+  importTransactionsRequest,
   listTransactionsRequest,
   updateTransactionRequest,
 } from "../api/transactions.js";
@@ -39,6 +40,10 @@ export default function TransactionsPage() {
   const [page, setPage] = useState(1);
   const [isExporting, setIsExporting] = useState(false);
   const [exportError, setExportError] = useState("");
+  const [isImporting, setIsImporting] = useState(false);
+  const [importError, setImportError] = useState("");
+  const [importResult, setImportResult] = useState(null);
+  const fileInputRef = useRef(null);
 
   function loadTransactions(activeFilters, activePage) {
     return listTransactionsRequest({ ...activeFilters, page: activePage })
@@ -76,6 +81,37 @@ export default function TransactionsPage() {
       setExportError("Não foi possível exportar o CSV");
     } finally {
       setIsExporting(false);
+    }
+  }
+
+  function handleImportClick() {
+    setImportError("");
+    setImportResult(null);
+    fileInputRef.current?.click();
+  }
+
+  async function handleFileSelected(event) {
+    const file = event.target.files?.[0];
+    // Reset the input's value so picking the exact same file again still
+    // fires onChange — otherwise a re-selection after fixing the CSV and
+    // retrying would silently do nothing.
+    event.target.value = "";
+    if (!file) return;
+
+    setIsImporting(true);
+    setImportError("");
+    setImportResult(null);
+    try {
+      const result = await importTransactionsRequest(file);
+      setImportResult(result);
+      // Newly imported rows may not land on the currently viewed page/filter
+      // (e.g. dates outside the applied range), but the counts/pagination
+      // should still reflect them — same reload used after create/delete.
+      await loadTransactions(appliedFilters, page);
+    } catch (err) {
+      setImportError(getErrorMessage(err, "Não foi possível importar o CSV"));
+    } finally {
+      setIsImporting(false);
     }
   }
 
@@ -145,6 +181,20 @@ export default function TransactionsPage() {
           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Transações</h2>
           {!isFormOpen && (
             <div className="flex gap-3">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".csv,text/csv"
+                onChange={handleFileSelected}
+                className="hidden"
+              />
+              <button
+                onClick={handleImportClick}
+                disabled={isImporting}
+                className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+              >
+                {isImporting ? "Importando..." : "Importar CSV"}
+              </button>
               <button
                 onClick={handleExport}
                 disabled={isExporting || !transactions?.length}
@@ -162,6 +212,33 @@ export default function TransactionsPage() {
           )}
         </div>
         {exportError && <p className="mb-4 text-sm text-red-600 dark:text-red-400">{exportError}</p>}
+        {importError && <p className="mb-4 text-sm text-red-600 dark:text-red-400">{importError}</p>}
+        {importResult && (
+          <div
+            className={`mb-4 rounded-md p-3 text-sm ${
+              importResult.failed > 0
+                ? "bg-amber-50 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
+                : "bg-green-50 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+            }`}
+          >
+            <p>
+              {importResult.imported} transaç{importResult.imported === 1 ? "ão" : "ões"} importada
+              {importResult.imported === 1 ? "" : "s"}
+              {importResult.failed > 0 &&
+                ` · ${importResult.failed} linha${importResult.failed === 1 ? "" : "s"} com erro`}
+              .
+            </p>
+            {importResult.errors.length > 0 && (
+              <ul className="mt-1 list-inside list-disc">
+                {importResult.errors.map((error) => (
+                  <li key={error.line}>
+                    Linha {error.line}: {error.message}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
 
         {isFormOpen && (
           <div className="mb-6 rounded-lg bg-white p-5 shadow dark:bg-gray-800">

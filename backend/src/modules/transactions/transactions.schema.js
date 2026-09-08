@@ -26,6 +26,13 @@ export const idParamSchema = z.object({
   id: z.string().uuid("ID inválido"),
 });
 
+// The raw CSV text, not a parsed structure — parsing/row-level validation
+// happens in the service (each row reuses createTransactionSchema), so this
+// just guards against an empty or missing body before that runs.
+export const importTransactionsSchema = z.object({
+  csv: z.string().min(1, "Arquivo CSV vazio"),
+});
+
 export const listTransactionsQuerySchema = z
   .object({
     startDate: z.coerce.date({ invalid_type_error: "Data inicial inválida" }).optional(),
