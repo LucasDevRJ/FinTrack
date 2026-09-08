@@ -63,6 +63,30 @@ describe("POST /api/transactions/import", () => {
     expect(bobTransactions).toHaveLength(0);
   });
 
+  it("imports a comma-delimited CSV with dd/mm/yyyy dates (spreadsheet-exported, not our own format)", async () => {
+    // Regression case: a real file Lucas built in Google Sheets and
+    // downloaded as CSV — comma-delimited (not our own export's ";") and
+    // Brazilian-format dates, which naive `new Date(...)` parsing would
+    // silently misread as month/day instead of day/month.
+    const { token } = await createAuthenticatedUser();
+    const csv = "Data,Tipo,Categoria,Descrição,Valor\r\n07/09/2026,Despesa,Restaurante,,39.9\r\n";
+
+    const res = await request(app)
+      .post("/api/transactions/import")
+      .set(authHeader(token))
+      .send({ csv });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ imported: 1, failed: 0, errors: [] });
+
+    // Only one transaction exists at this point (resetDb runs beforeEach) —
+    // asserting on it directly confirms the date wasn't misread as
+    // month/day (which would store July 9th instead of September 7th).
+    const [stored] = await prisma.transaction.findMany();
+    expect(stored.date.toISOString().slice(0, 10)).toBe("2026-09-07");
+    expect(Number(stored.amount)).toBe(39.9);
+  });
+
   it("rejects an empty CSV body", async () => {
     const { token } = await createAuthenticatedUser();
     const res = await request(app)

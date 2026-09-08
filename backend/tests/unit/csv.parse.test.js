@@ -4,7 +4,7 @@
 // the delimiter/quotes/newlines, CRLF vs LF line endings, and a missing
 // trailing newline.
 import { describe, expect, it } from "vitest";
-import { parseCsv, toCsv } from "../../src/utils/csv.js";
+import { detectDelimiter, parseCsv, toCsv } from "../../src/utils/csv.js";
 
 describe("parseCsv", () => {
   it("round-trips what toCsv produces, BOM included", () => {
@@ -44,5 +44,31 @@ describe("parseCsv", () => {
 
   it("drops blank trailing lines instead of surfacing them as a row", () => {
     expect(parseCsv("a;b\n\n")).toEqual([["a", "b"]]);
+  });
+
+  it("parses a comma-delimited row when told to", () => {
+    expect(parseCsv("a,b,c\n", ",")).toEqual([["a", "b", "c"]]);
+  });
+});
+
+describe("detectDelimiter", () => {
+  it("picks ';' for a file matching our own export format", () => {
+    expect(detectDelimiter("Data;Tipo;Categoria;Descrição;Valor\n2026-09-07;Despesa;X;;39,90\n")).toBe(
+      ";"
+    );
+  });
+
+  it("picks ',' for a CSV downloaded from a spreadsheet (Google Sheets/Excel)", () => {
+    expect(
+      detectDelimiter("Data,Tipo,Categoria,Descrição,Valor\r\n07/09/2026,Despesa,Restaurante,,39.9")
+    ).toBe(",");
+  });
+
+  it("strips the BOM before sniffing so it doesn't skew the header line", () => {
+    expect(detectDelimiter("﻿Data,Tipo,Categoria,Descrição,Valor\n")).toBe(",");
+  });
+
+  it("falls back to ';' when neither delimiter is more common (e.g. a single-column file)", () => {
+    expect(detectDelimiter("SomenteUmaColuna\n")).toBe(";");
   });
 });
