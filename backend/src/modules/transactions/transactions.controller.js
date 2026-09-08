@@ -30,6 +30,15 @@ export async function exportCsv(req, res, next) {
   }
 }
 
+export async function importCsv(req, res, next) {
+  try {
+    const result = await transactionsService.importTransactionsFromCsv(req.userId, req.body.csv);
+    res.status(200).json(result);
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function summary(req, res, next) {
   try {
     const data = await transactionsService.getSummary(req.userId);
