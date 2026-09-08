@@ -23,6 +23,21 @@ export function toCsv(headers, rows) {
   return BOM + lines.join("\r\n");
 }
 
+// Sniffs which delimiter a CSV actually uses, from just its header line —
+// our own export always writes ";" (Brazilian-locale-spreadsheet
+// convention), but a file a user builds by hand in Google Sheets/Excel and
+// downloads as CSV very commonly comes out "," instead, regardless of
+// locale. Whichever character appears more often in the header line wins;
+// ";" is the default/tiebreak so a file with neither (or a real semicolon
+// file) keeps working exactly as before.
+export function detectDelimiter(text) {
+  const content = text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
+  const headerLine = content.split(/\r\n|\n/, 1)[0] ?? "";
+  const commaCount = (headerLine.match(/,/g) ?? []).length;
+  const semicolonCount = (headerLine.match(/;/g) ?? []).length;
+  return commaCount > semicolonCount ? "," : DELIMITER;
+}
+
 // Reverse of toCsv above: a small hand-rolled state machine rather than a
 // naive split(";")/split("\n"), because a quoted field can itself contain
 // the delimiter, a literal quote (escaped as "") or an embedded newline —
@@ -30,8 +45,10 @@ export function toCsv(headers, rows) {
 // prefixes files with, and tolerates both "\r\n" and "\n" line endings so a
 // CSV re-saved by a non-Windows tool still parses. Returns every row
 // (including the header) as an array of raw string fields — callers decide
-// what to do with the header row.
-export function parseCsv(text) {
+// what to do with the header row. `delimiter` defaults to ";" (toCsv's own
+// convention) but callers reading a file of unknown origin should pass the
+// result of detectDelimiter instead.
+export function parseCsv(text, delimiter = DELIMITER) {
   const content = text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
   const rows = [];
   let row = [];
@@ -57,7 +74,7 @@ export function parseCsv(text) {
 
     if (char === '"') {
       inQuotes = true;
-    } else if (char === DELIMITER) {
+    } else if (char === delimiter) {
       row.push(field);
       field = "";
     } else if (char === "\r") {

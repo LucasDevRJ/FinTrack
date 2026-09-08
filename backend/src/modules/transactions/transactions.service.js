@@ -1,7 +1,7 @@
 import prisma from "../../lib/prisma.js";
 import { generateDueRecurringTransactions } from "../recurring/recurring.service.js";
 import { AppError } from "../../utils/AppError.js";
-import { parseCsv, toCsv } from "../../utils/csv.js";
+import { detectDelimiter, parseCsv, toCsv } from "../../utils/csv.js";
 import { createTransactionSchema } from "./transactions.schema.js";
 
 // Prisma returns `amount` as a Decimal instance (precise for DB math), but
@@ -160,13 +160,29 @@ function parseImportAmount(raw) {
   return Number(trimmed);
 }
 
+// Our own export writes ISO ("2026-09-07"), which z.coerce.date handles
+// natively — but a date typed into a spreadsheet by hand very commonly
+// comes out "07/09/2026" (day/month/year, the Brazilian convention).
+// Handing that straight to `new Date(...)` would silently misparse it as
+// month/day (US convention) instead of raising an error, so it's rewritten
+// to ISO explicitly rather than trusted to Date's own parsing.
+const BR_DATE_RE = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+
+function parseImportDate(raw) {
+  const trimmed = raw.trim();
+  const match = trimmed.match(BR_DATE_RE);
+  if (!match) return trimmed;
+  const [, day, month, year] = match;
+  return `${year}-${month}-${day}`;
+}
+
 function parseImportRow(columns) {
   const [date, type, category, description, amount] = columns;
   return {
     type: parseImportType(type ?? ""),
     amount: parseImportAmount(amount ?? ""),
     category: (category ?? "").trim(),
-    date: (date ?? "").trim(),
+    date: parseImportDate(date ?? ""),
     description: (description ?? "").trim() || undefined,
   };
 }
@@ -176,7 +192,7 @@ function parseImportRow(columns) {
 // so every well-formed row is imported and the rest are reported back by
 // line number for the user to fix and (if they want) re-import separately.
 export async function importTransactionsFromCsv(userId, csvText) {
-  const allRows = parseCsv(csvText);
+  const allRows = parseCsv(csvText, detectDelimiter(csvText));
   if (allRows.length === 0) {
     throw new AppError("Arquivo CSV vazio", 400);
   }
