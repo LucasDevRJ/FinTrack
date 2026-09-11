@@ -1,6 +1,18 @@
 import resend from "../lib/resend.js";
 
+// Vitest's integration suite mocks resend.js directly (see
+// tests/setup/mockResend.js), so it never reaches here. But the E2E suite
+// (Playwright) talks to a real running Express process — every /register
+// call now sends a verification e-mail (see auth.service.js's registerUser),
+// and CI has no real Resend key, so without this guard every single
+// registration in that suite would fail with a real 401 from Resend, which
+// (since authLimiter only skips *successful* requests) would rapid-fire trip
+// the rate limiter on top of just failing outright.
+const SKIP_SENDING = process.env.NODE_ENV === "test";
+
 export async function sendPasswordResetEmail(to, resetUrl) {
+  if (SKIP_SENDING) return;
+
   // The Resend SDK doesn't throw on API errors — it resolves with
   // { data: null, error } — so a bad key or misconfiguration would otherwise
   // fail silently and the "reset e-mail" would just never arrive.
@@ -21,6 +33,8 @@ export async function sendPasswordResetEmail(to, resetUrl) {
 }
 
 export async function sendVerificationEmail(to, verifyUrl) {
+  if (SKIP_SENDING) return;
+
   const { error } = await resend.emails.send({
     from: process.env.EMAIL_FROM,
     to,

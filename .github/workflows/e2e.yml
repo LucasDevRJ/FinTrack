@@ -29,14 +29,20 @@ jobs:
     env:
       # Backend (consumed both directly and by the webServer subprocess
       # Playwright spawns for the e2e run — see e2e/playwright.config.js)
+      # NODE_ENV=test disables the auth rate limiter (same as
+      # backend-tests.yml) and, since #41, also makes mailer.js skip actually
+      # calling Resend — every /register call sends a verification e-mail
+      # now, and this suite creates a lot of users.
+      NODE_ENV: test
       DATABASE_URL: postgresql://fintrack:fintrack@localhost:5432/fintrack?schema=public
       JWT_SECRET: ci-only-secret-not-used-in-production
       JWT_EXPIRES_IN: 1d
       PORT: 3333
       CORS_ORIGIN: http://localhost:5173
       FRONTEND_URL: http://localhost:5173
-      # No real Resend key in CI — nothing in the e2e suite sends e-mail,
-      # this just needs to exist so the client can be instantiated.
+      # No real Resend key in CI — the client is skipped entirely under
+      # NODE_ENV=test (see backend/src/utils/mailer.js), this just needs to
+      # exist so the client can be instantiated.
       RESEND_API_KEY: re_dummy_ci_key
       EMAIL_FROM: "FinTrack <onboarding@resend.dev>"
       # Frontend
