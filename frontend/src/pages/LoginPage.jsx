@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
+import { resendVerificationRequest } from "../api/auth.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import { getErrorMessage } from "../utils/apiError.js";
 
@@ -11,10 +12,16 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDemoLoading, setIsDemoLoading] = useState(false);
+  // The backend uses 403 specifically for "your account exists but the
+  // e-mail isn't confirmed yet" — every other login failure is a 401. Used
+  // to show a "reenviar e-mail" affordance only in that specific case.
+  const [needsVerification, setNeedsVerification] = useState(false);
+  const [resendState, setResendState] = useState("idle"); // idle | sending | sent
 
   async function handleSubmit(event) {
     event.preventDefault();
     setError("");
+    setNeedsVerification(false);
     setIsSubmitting(true);
 
     try {
@@ -22,8 +29,20 @@ export default function LoginPage() {
       navigate("/dashboard");
     } catch (err) {
       setError(getErrorMessage(err, "Não foi possível fazer login"));
+      setNeedsVerification(err.response?.status === 403);
     } finally {
       setIsSubmitting(false);
+    }
+  }
+
+  async function handleResendVerification() {
+    setResendState("sending");
+    try {
+      await resendVerificationRequest(email);
+    } finally {
+      // Same generic outcome either way — the endpoint itself never reveals
+      // whether the e-mail exists (see resendVerificationEmail).
+      setResendState("sent");
     }
   }
 
@@ -77,6 +96,22 @@ export default function LoginPage() {
           </div>
 
           {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+
+          {needsVerification &&
+            (resendState === "sent" ? (
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Se o e-mail existir e ainda não estiver confirmado, reenviamos o link.
+              </p>
+            ) : (
+              <button
+                type="button"
+                onClick={handleResendVerification}
+                disabled={resendState === "sending"}
+                className="text-sm text-indigo-600 hover:underline disabled:opacity-50 dark:text-indigo-400"
+              >
+                {resendState === "sending" ? "Enviando..." : "Reenviar e-mail de confirmação"}
+              </button>
+            ))}
 
           <button
             type="submit"

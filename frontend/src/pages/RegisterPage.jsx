@@ -1,16 +1,16 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link } from "react-router";
 import { useAuth } from "../context/AuthContext.jsx";
 import { getErrorMessage } from "../utils/apiError.js";
 
 export default function RegisterPage() {
   const { register } = useAuth();
-  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRegistered, setIsRegistered] = useState(false);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -19,12 +19,33 @@ export default function RegisterPage() {
 
     try {
       await register(name, email, password);
-      navigate("/dashboard");
+      setIsRegistered(true);
     } catch (err) {
       setError(getErrorMessage(err, "Não foi possível criar a conta"));
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  if (isRegistered) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4 dark:bg-gray-900">
+        <div className="w-full max-w-sm rounded-lg bg-white p-8 shadow dark:bg-gray-800">
+          <h1 className="mb-4 text-2xl font-semibold text-gray-900 dark:text-gray-100">
+            Confirme seu e-mail
+          </h1>
+          <p className="text-sm text-gray-700 dark:text-gray-300">
+            Enviamos um link de confirmação para <strong>{email}</strong>. Clique nele para ativar
+            sua conta e poder fazer login. Verifique também a caixa de spam.
+          </p>
+          <p className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
+            <Link to="/login" className="text-indigo-600 hover:underline dark:text-indigo-400">
+              Voltar para o login
+            </Link>
+          </p>
+        </div>
+      </main>
+    );
   }
 
   return (

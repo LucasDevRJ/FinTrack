@@ -33,3 +33,13 @@ export async function resetPasswordRequest(token, password) {
   const { data } = await apiClient.post("/auth/reset-password", { token, password });
   return data;
 }
+
+export async function verifyEmailRequest(token) {
+  const { data } = await apiClient.post("/auth/verify-email", { token });
+  return data;
+}
+
+export async function resendVerificationRequest(email) {
+  const { data } = await apiClient.post("/auth/resend-verification", { email });
+  return data;
+}
