@@ -11,6 +11,7 @@ import RecurringPage from "./pages/RecurringPage.jsx";
 import RegisterPage from "./pages/RegisterPage.jsx";
 import ResetPasswordPage from "./pages/ResetPasswordPage.jsx";
 import TransactionsPage from "./pages/TransactionsPage.jsx";
+import VerifyEmailPage from "./pages/VerifyEmailPage.jsx";
 import { isDemoUser } from "./utils/demo.js";
 
 // "Minha conta" doesn't make sense for the shared public demo account (see
@@ -34,6 +35,7 @@ export default function App() {
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/verify-email" element={<VerifyEmailPage />} />
       <Route
         path="/dashboard"
         element={

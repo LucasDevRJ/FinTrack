@@ -24,3 +24,11 @@ export const resetPasswordSchema = z.object({
   token: z.string().min(1, "Token é obrigatório"),
   password: z.string().min(8, "Senha deve ter pelo menos 8 caracteres").max(72),
 });
+
+export const verifyEmailSchema = z.object({
+  token: z.string().min(1, "Token é obrigatório"),
+});
+
+export const resendVerificationSchema = z.object({
+  email: z.string().trim().toLowerCase().email("E-mail inválido"),
+});

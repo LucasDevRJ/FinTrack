@@ -19,15 +19,32 @@ export function uniqueUser(prefix = "e2e") {
  * itself, so each test doesn't have to re-walk the register form just to
  * get to a logged-in state — the auth flow itself is covered separately in
  * auth.spec.js.
+ *
+ * Login is blocked until the e-mail is confirmed (see auth.service.js's
+ * loginUser), so this also calls /verify-email right after registering,
+ * using the devVerificationToken the backend only includes outside of
+ * production — there's no real inbox for a Playwright run to check.
  */
 export async function registerUserViaApi(request, user = uniqueUser()) {
-  const response = await request.post(`${API_URL}/auth/register`, {
+  const registerResponse = await request.post(`${API_URL}/auth/register`, {
     data: user,
   });
-  if (!response.ok()) {
-    throw new Error(`Falha ao registrar usuário de teste: ${response.status()} ${await response.text()}`);
+  if (!registerResponse.ok()) {
+    throw new Error(
+      `Falha ao registrar usuário de teste: ${registerResponse.status()} ${await registerResponse.text()}`,
+    );
   }
-  const { token } = await response.json();
+  const { devVerificationToken } = await registerResponse.json();
+
+  const verifyResponse = await request.post(`${API_URL}/auth/verify-email`, {
+    data: { token: devVerificationToken },
+  });
+  if (!verifyResponse.ok()) {
+    throw new Error(
+      `Falha ao verificar e-mail do usuário de teste: ${verifyResponse.status()} ${await verifyResponse.text()}`,
+    );
+  }
+  const { token } = await verifyResponse.json();
   return { user, token };
 }
 

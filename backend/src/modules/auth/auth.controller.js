@@ -64,3 +64,23 @@ export async function resetPassword(req, res, next) {
     next(err);
   }
 }
+
+export async function verifyEmail(req, res, next) {
+  try {
+    const result = await authService.verifyEmail(req.body.token);
+    res.status(200).json(result);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function resendVerification(req, res, next) {
+  try {
+    await authService.resendVerificationEmail(req.body.email);
+    // Same response whether or not the email is registered/already verified
+    // — see resendVerificationEmail for why.
+    res.status(200).json({ message: "Se o e-mail existir e ainda não estiver confirmado, reenviamos o link" });
+  } catch (err) {
+    next(err);
+  }
+}

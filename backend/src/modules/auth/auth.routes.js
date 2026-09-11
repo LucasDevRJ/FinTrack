@@ -8,7 +8,9 @@ import {
   forgotPasswordSchema,
   loginSchema,
   registerSchema,
+  resendVerificationSchema,
   resetPasswordSchema,
+  verifyEmailSchema,
 } from "./auth.schema.js";
 
 const router = Router();
@@ -29,6 +31,18 @@ router.post(
   authLimiter,
   validate(resetPasswordSchema),
   authController.resetPassword,
+);
+router.post(
+  "/verify-email",
+  authLimiter,
+  validate(verifyEmailSchema),
+  authController.verifyEmail,
+);
+router.post(
+  "/resend-verification",
+  authLimiter,
+  validate(resendVerificationSchema),
+  authController.resendVerification,
 );
 
 export default router;

@@ -3,10 +3,15 @@ import crypto from "node:crypto";
 import prisma from "../../lib/prisma.js";
 import { AppError } from "../../utils/AppError.js";
 import { signToken } from "../../utils/jwt.js";
-import { sendPasswordResetEmail } from "../../utils/mailer.js";
+import { sendPasswordResetEmail, sendVerificationEmail } from "../../utils/mailer.js";
 
 const SALT_ROUNDS = 10;
 const RESET_TOKEN_TTL_MS = 30 * 60 * 1000;
+// Longer than the password-reset TTL above on purpose: confirming an e-mail
+// isn't as security-sensitive as proving identity right before a password
+// change, and giving up on a link after 30 minutes would be an easy way to
+// lose a real signup (inbox checked later that day, not that minute).
+const EMAIL_VERIFICATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
 const DEMO_EMAIL = "demo@fintrack.app";
 
 function hashToken(token) {
@@ -25,11 +30,34 @@ export async function registerUser({ name, email, password }) {
   }
 
   const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+  const rawToken = crypto.randomBytes(32).toString("hex");
   const user = await prisma.user.create({
-    data: { name, email, password: hashedPassword },
+    data: {
+      name,
+      email,
+      password: hashedPassword,
+      emailVerificationTokenHash: hashToken(rawToken),
+      emailVerificationExpiresAt: new Date(Date.now() + EMAIL_VERIFICATION_TOKEN_TTL_MS),
+    },
   });
 
-  return { user: sanitizeUser(user), token: signToken(user.id) };
+  const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${rawToken}`;
+  await sendVerificationEmail(user.email, verifyUrl);
+
+  // No token here anymore — login is blocked until the e-mail above is
+  // confirmed (see loginUser), so issuing one at registration would let the
+  // frontend skip straight past that check.
+  const result = { user: sanitizeUser(user), message: "Verifique seu e-mail para ativar a conta" };
+
+  // Non-production convenience: nothing here can click a real e-mail link
+  // (local dev, and the automated test suites — see tests/setup/auth.js and
+  // e2e/helpers/testUser.js), so hand back the raw token directly. Never
+  // exposed in production, where it only ever travels inside the e-mail.
+  if (process.env.NODE_ENV !== "production") {
+    result.devVerificationToken = rawToken;
+  }
+
+  return result;
 }
 
 export async function loginUser({ email, password }) {
@@ -44,7 +72,57 @@ export async function loginUser({ email, password }) {
   const passwordMatches = await bcrypt.compare(password, user.password);
   if (!passwordMatches) throw invalidCredentialsError;
 
+  if (!user.emailVerifiedAt) {
+    throw new AppError(
+      "Confirme seu e-mail antes de fazer login. Verifique sua caixa de entrada.",
+      403,
+    );
+  }
+
   return { user: sanitizeUser(user), token: signToken(user.id) };
+}
+
+export async function verifyEmail(token) {
+  const user = await prisma.user.findFirst({
+    where: {
+      emailVerificationTokenHash: hashToken(token),
+      emailVerificationExpiresAt: { gt: new Date() },
+    },
+  });
+  if (!user) throw new AppError("Link de verificação inválido ou expirado", 400);
+
+  const verifiedUser = await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      emailVerifiedAt: new Date(),
+      emailVerificationTokenHash: null,
+      emailVerificationExpiresAt: null,
+    },
+  });
+
+  // Verifying is also the moment the account becomes usable — issue a token
+  // right away instead of sending the user back to fill in the login form.
+  return { user: sanitizeUser(verifiedUser), token: signToken(verifiedUser.id) };
+}
+
+export async function resendVerificationEmail(email) {
+  const user = await prisma.user.findUnique({ where: { email } });
+  // Silently no-op for unknown emails (avoids enumeration, same as
+  // requestPasswordReset below) and for already-verified ones — the
+  // controller always replies the same generic message either way.
+  if (!user || user.emailVerifiedAt) return;
+
+  const rawToken = crypto.randomBytes(32).toString("hex");
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      emailVerificationTokenHash: hashToken(rawToken),
+      emailVerificationExpiresAt: new Date(Date.now() + EMAIL_VERIFICATION_TOKEN_TTL_MS),
+    },
+  });
+
+  const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${rawToken}`;
+  await sendVerificationEmail(user.email, verifyUrl);
 }
 
 export async function getUserById(id) {

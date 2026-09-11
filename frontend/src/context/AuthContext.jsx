@@ -5,6 +5,7 @@ import {
   loginRequest,
   meRequest,
   registerRequest,
+  verifyEmailRequest,
 } from "../api/auth.js";
 
 const AuthContext = createContext(null);
@@ -41,9 +42,17 @@ export function AuthProvider({ children }) {
     setUser(user);
   }
 
+  // No token comes back here anymore — the account can't log in until the
+  // e-mail sent by the backend is confirmed (see verifyEmail below), so
+  // there's nothing to store yet. RegisterPage shows a "check your inbox"
+  // screen with whatever this resolves to.
   async function register(name, email, password) {
-    const { user, token } = await registerRequest({ name, email, password });
-    localStorage.setItem("fintrack_token", token);
+    return registerRequest({ name, email, password });
+  }
+
+  async function verifyEmail(token) {
+    const { user, token: authToken } = await verifyEmailRequest(token);
+    localStorage.setItem("fintrack_token", authToken);
     setUser(user);
   }
 
@@ -59,7 +68,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, isLoading, login, loginAsDemo, register, logout, deleteAccount }}
+      value={{ user, isLoading, login, loginAsDemo, register, verifyEmail, logout, deleteAccount }}
     >
       {children}
     </AuthContext.Provider>
