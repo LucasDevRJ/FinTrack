@@ -36,8 +36,9 @@ jobs:
       JWT_EXPIRES_IN: 1d
       PORT: 3334
       CORS_ORIGIN: http://localhost:5173
-      # No real Resend key in CI — nothing in this suite sends e-mail, this
-      # just needs to exist so the client can be instantiated.
+      # No real Resend key in CI — the client is mocked globally in tests
+      # (see backend/tests/setup/mockResend.js), this just needs to exist so
+      # the client can be instantiated before the mock takes over.
       RESEND_API_KEY: re_dummy_ci_key
       EMAIL_FROM: "FinTrack <onboarding@resend.dev>"
       FRONTEND_URL: http://localhost:5173
