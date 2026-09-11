@@ -53,7 +53,7 @@ export default function LandingPage() {
   return (
     <main className="bg-gray-50 dark:bg-gray-900">
       <header className="mx-auto flex max-w-5xl items-center justify-between px-4 py-6 sm:px-8">
-        <span className="text-xl font-semibold text-gray-900 dark:text-gray-100">FinTrack</span>
+        <img src="/logo-horizontal.png" alt="FinTrack" className="h-8 w-auto sm:h-9" />
         <div className="flex items-center gap-4">
           <ThemeToggleButton />
           <Link
