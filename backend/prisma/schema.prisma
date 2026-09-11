@@ -20,6 +20,13 @@ model User {
   resetPasswordTokenHash String?
   resetPasswordExpiresAt DateTime?
 
+  // Null until the e-mail sent at registration is confirmed; login is
+  // blocked until this is set (see auth.service.js's loginUser). Same
+  // hashed-token/expiry pattern as the password-reset fields above.
+  emailVerifiedAt            DateTime?
+  emailVerificationTokenHash String?
+  emailVerificationExpiresAt DateTime?
+
   transactions          Transaction[]
   budgetGoals           BudgetGoal[]
   recurringTransactions RecurringTransaction[]

@@ -19,3 +19,20 @@ export async function sendPasswordResetEmail(to, resetUrl) {
     throw new Error(`Falha ao enviar e-mail via Resend: ${error.message}`);
   }
 }
+
+export async function sendVerificationEmail(to, verifyUrl) {
+  const { error } = await resend.emails.send({
+    from: process.env.EMAIL_FROM,
+    to,
+    subject: "Confirme seu e-mail no FinTrack",
+    html: `
+      <p>Falta só um passo para ativar sua conta no FinTrack.</p>
+      <p><a href="${verifyUrl}">Clique aqui para confirmar seu e-mail</a></p>
+      <p>Este link expira em 24 horas. Se você não criou uma conta no FinTrack, pode ignorar este e-mail.</p>
+    `,
+  });
+
+  if (error) {
+    throw new Error(`Falha ao enviar e-mail via Resend: ${error.message}`);
+  }
+}
