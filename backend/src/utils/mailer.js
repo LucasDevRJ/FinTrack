@@ -50,3 +50,68 @@ export async function sendVerificationEmail(to, verifyUrl) {
     throw new Error(`Falha ao enviar e-mail via Resend: ${error.message}`);
   }
 }
+
+// Sent to the NEW address requested via "editar perfil" — proves the user
+// actually owns it before the account's email column is touched (see
+// auth.service.js's requestEmailChange/confirmEmailChange).
+export async function sendEmailChangeConfirmation(to, confirmUrl) {
+  if (SKIP_SENDING) return;
+
+  const { error } = await resend.emails.send({
+    from: process.env.EMAIL_FROM,
+    to,
+    subject: "Confirme seu novo e-mail no FinTrack",
+    html: `
+      <p>Recebemos um pedido para usar este endereço como o novo e-mail da sua conta no FinTrack.</p>
+      <p><a href="${confirmUrl}">Clique aqui para confirmar a troca de e-mail</a></p>
+      <p>Este link expira em 24 horas. Se você não pediu essa troca, pode ignorar este e-mail — seu e-mail atual continua sem alterações.</p>
+    `,
+  });
+
+  if (error) {
+    throw new Error(`Falha ao enviar e-mail via Resend: ${error.message}`);
+  }
+}
+
+// Security notice sent to the OLD (current) address the moment a change is
+// requested — before the new address even confirms it — so the account
+// owner finds out immediately if they didn't request this themselves.
+export async function sendEmailChangeNotice(to, newEmail) {
+  if (SKIP_SENDING) return;
+
+  const { error } = await resend.emails.send({
+    from: process.env.EMAIL_FROM,
+    to,
+    subject: "Solicitação de troca de e-mail na sua conta FinTrack",
+    html: `
+      <p>Foi solicitada a troca do e-mail desta conta para <strong>${newEmail}</strong>.</p>
+      <p>A troca só será concluída se o novo endereço confirmar o link enviado a ele.</p>
+      <p>Se não foi você quem pediu essa troca, recomendamos alterar sua senha imediatamente.</p>
+    `,
+  });
+
+  if (error) {
+    throw new Error(`Falha ao enviar e-mail via Resend: ${error.message}`);
+  }
+}
+
+// Security notice sent right after a successful password change (whether via
+// "esqueci minha senha" or the logged-in "editar perfil" flow) — distinct
+// from sendPasswordResetEmail above, which sends the reset link itself.
+export async function sendPasswordChangedEmail(to) {
+  if (SKIP_SENDING) return;
+
+  const { error } = await resend.emails.send({
+    from: process.env.EMAIL_FROM,
+    to,
+    subject: "Sua senha no FinTrack foi alterada",
+    html: `
+      <p>A senha da sua conta no FinTrack acabou de ser alterada.</p>
+      <p>Se não foi você, redefina sua senha imediatamente pela opção "Esqueci minha senha" na tela de login.</p>
+    `,
+  });
+
+  if (error) {
+    throw new Error(`Falha ao enviar e-mail via Resend: ${error.message}`);
+  }
+}

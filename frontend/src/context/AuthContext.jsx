@@ -1,10 +1,14 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import {
+  changePasswordRequest,
+  confirmEmailChangeRequest,
   deleteAccountRequest,
   demoLoginRequest,
   loginRequest,
   meRequest,
   registerRequest,
+  requestEmailChangeRequest,
+  updateNameRequest,
   verifyEmailRequest,
 } from "../api/auth.js";
 
@@ -66,9 +70,44 @@ export function AuthProvider({ children }) {
     logout();
   }
 
+  async function updateName(name) {
+    const { user: updatedUser } = await updateNameRequest(name);
+    setUser(updatedUser);
+  }
+
+  async function requestEmailChange(email) {
+    return requestEmailChangeRequest(email);
+  }
+
+  // Confirming the e-mail change re-issues a token (same reasoning as
+  // verifyEmail above) — the account's e-mail just changed, so this replaces
+  // whatever session was active with one that reflects it.
+  async function confirmEmailChange(token) {
+    const { user: updatedUser, token: authToken } = await confirmEmailChangeRequest(token);
+    localStorage.setItem("fintrack_token", authToken);
+    setUser(updatedUser);
+  }
+
+  async function changePassword(currentPassword, newPassword) {
+    return changePasswordRequest(currentPassword, newPassword);
+  }
+
   return (
     <AuthContext.Provider
-      value={{ user, isLoading, login, loginAsDemo, register, verifyEmail, logout, deleteAccount }}
+      value={{
+        user,
+        isLoading,
+        login,
+        loginAsDemo,
+        register,
+        verifyEmail,
+        logout,
+        deleteAccount,
+        updateName,
+        requestEmailChange,
+        confirmEmailChange,
+        changePassword,
+      }}
     >
       {children}
     </AuthContext.Provider>

@@ -6,6 +6,7 @@
 import request from "supertest";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import app from "../../src/app.js";
+import { authHeader, createAuthenticatedUser } from "../setup/auth.js";
 import { prisma, resetDb } from "../setup/db.js";
 
 beforeEach(resetDb);
@@ -133,5 +134,101 @@ describe("POST /api/auth/resend-verification", () => {
     const dbUser = await prisma.user.findUnique({ where: { email: user.email } });
     expect(dbUser.emailVerificationTokenHash).toEqual(expect.any(String));
     expect(dbUser.emailVerificationExpiresAt.getTime()).toBeGreaterThan(Date.now());
+  });
+});
+
+// Integration tests for issue #4's edit-profile flow: name updates directly,
+// e-mail changes require confirming ownership of the new address, password
+// changes require the current password (not an e-mail code — see auth.service.js).
+describe("PATCH /api/auth/me", () => {
+  it("updates the user's name", async () => {
+    const { token } = await createAuthenticatedUser();
+
+    const res = await request(app)
+      .patch("/api/auth/me")
+      .set(authHeader(token))
+      .send({ name: "Novo Nome" });
+
+    expect(res.status).toBe(200);
+    expect(res.body.user.name).toBe("Novo Nome");
+  });
+
+  it("rejects an unauthenticated request", async () => {
+    const res = await request(app).patch("/api/auth/me").send({ name: "Novo Nome" });
+    expect(res.status).toBe(401);
+  });
+});
+
+describe("POST /api/auth/me/email + /api/auth/confirm-email-change", () => {
+  it("does not change the email until the confirmation link is used", async () => {
+    const { token, user } = await createAuthenticatedUser();
+    const newEmail = `new-${Date.now()}@example.com`;
+
+    const requestRes = await request(app)
+      .post("/api/auth/me/email")
+      .set(authHeader(token))
+      .send({ email: newEmail });
+
+    expect(requestRes.status).toBe(200);
+    expect(requestRes.body.devEmailChangeToken).toEqual(expect.any(String));
+
+    const meRes = await request(app).get("/api/auth/me").set(authHeader(token));
+    expect(meRes.body.user.email).toBe(user.email);
+
+    const confirmRes = await request(app)
+      .post("/api/auth/confirm-email-change")
+      .send({ token: requestRes.body.devEmailChangeToken });
+
+    expect(confirmRes.status).toBe(200);
+    expect(confirmRes.body.user.email).toBe(newEmail);
+    expect(confirmRes.body.token).toEqual(expect.any(String));
+  });
+
+  it("rejects requesting an email already used by another account", async () => {
+    const { token } = await createAuthenticatedUser();
+    const other = await createAuthenticatedUser();
+
+    const res = await request(app)
+      .post("/api/auth/me/email")
+      .set(authHeader(token))
+      .send({ email: other.user.email });
+
+    expect(res.status).toBe(409);
+  });
+
+  it("rejects an invalid or expired confirmation token", async () => {
+    const res = await request(app)
+      .post("/api/auth/confirm-email-change")
+      .send({ token: "not-a-real-token" });
+
+    expect(res.status).toBe(400);
+  });
+});
+
+describe("POST /api/auth/me/password", () => {
+  it("changes the password when the current password is correct", async () => {
+    const { token, user } = await createAuthenticatedUser({ password: "password123" });
+
+    const changeRes = await request(app)
+      .post("/api/auth/me/password")
+      .set(authHeader(token))
+      .send({ currentPassword: "password123", newPassword: "newpassword456" });
+    expect(changeRes.status).toBe(200);
+
+    const loginRes = await request(app)
+      .post("/api/auth/login")
+      .send({ email: user.email, password: "newpassword456" });
+    expect(loginRes.status).toBe(200);
+  });
+
+  it("rejects an incorrect current password", async () => {
+    const { token } = await createAuthenticatedUser({ password: "password123" });
+
+    const res = await request(app)
+      .post("/api/auth/me/password")
+      .set(authHeader(token))
+      .send({ currentPassword: "wrong-password", newPassword: "newpassword456" });
+
+    expect(res.status).toBe(401);
   });
 });

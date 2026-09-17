@@ -27,6 +27,14 @@ model User {
   emailVerificationTokenHash String?
   emailVerificationExpiresAt DateTime?
 
+  // Set while an e-mail change is pending confirmation (issue #4): the new
+  // address isn't written to `email` until its own confirmation link is
+  // clicked, proving the user actually owns it. All three null when no
+  // change is pending. Same hashed-token/expiry pattern as the fields above.
+  pendingEmail          String?
+  pendingEmailTokenHash String?
+  pendingEmailExpiresAt DateTime?
+
   transactions          Transaction[]
   budgetGoals           BudgetGoal[]
   recurringTransactions RecurringTransaction[]

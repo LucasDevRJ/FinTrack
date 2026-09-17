@@ -3,7 +3,13 @@ import crypto from "node:crypto";
 import prisma from "../../lib/prisma.js";
 import { AppError } from "../../utils/AppError.js";
 import { signToken } from "../../utils/jwt.js";
-import { sendPasswordResetEmail, sendVerificationEmail } from "../../utils/mailer.js";
+import {
+  sendEmailChangeConfirmation,
+  sendEmailChangeNotice,
+  sendPasswordChangedEmail,
+  sendPasswordResetEmail,
+  sendVerificationEmail,
+} from "../../utils/mailer.js";
 
 const SALT_ROUNDS = 10;
 const RESET_TOKEN_TTL_MS = 30 * 60 * 1000;
@@ -12,6 +18,9 @@ const RESET_TOKEN_TTL_MS = 30 * 60 * 1000;
 // change, and giving up on a link after 30 minutes would be an easy way to
 // lose a real signup (inbox checked later that day, not that minute).
 const EMAIL_VERIFICATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
+// Same window as e-mail verification — this link also just needs to prove
+// mailbox ownership, no extra time pressure over the signup case.
+const EMAIL_CHANGE_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
 const DEMO_EMAIL = "demo@fintrack.app";
 
 function hashToken(token) {
@@ -19,8 +28,18 @@ function hashToken(token) {
 }
 
 function sanitizeUser(user) {
-  const { password, ...safeUser } = user;
+  const { password, pendingEmail, pendingEmailTokenHash, pendingEmailExpiresAt, ...safeUser } = user;
   return safeUser;
+}
+
+// Reused by every account-mutating action below (edit name/email/password) —
+// same reasoning as the existing delete guard in deleteUserAccount: letting
+// any of these succeed against the shared public demo account would corrupt
+// or break it for every future visitor, not just the caller.
+function assertNotDemoAccount(user) {
+  if (user.email === DEMO_EMAIL) {
+    throw new AppError("Não é possível alterar dados da conta de demonstração pública", 403);
+  }
 }
 
 export async function registerUser({ name, email, password }) {
@@ -151,6 +170,106 @@ export async function deleteUserAccount(id, password) {
 
   // Transaction rows cascade-delete via the schema's onDelete: Cascade.
   await prisma.user.delete({ where: { id } });
+}
+
+export async function updateUserName(id, name) {
+  const user = await prisma.user.findUnique({ where: { id } });
+  if (!user) throw new AppError("Usuário não encontrado", 404);
+  assertNotDemoAccount(user);
+
+  const updated = await prisma.user.update({ where: { id }, data: { name } });
+  return sanitizeUser(updated);
+}
+
+// Doesn't touch `email` yet — only stages the change and sends the
+// confirmation link to the NEW address, since that's the thing this flow
+// needs to prove (see issue #4's design notes). A security notice also goes
+// to the current address right away, before the new one even confirms.
+export async function requestEmailChange(id, newEmail) {
+  const user = await prisma.user.findUnique({ where: { id } });
+  if (!user) throw new AppError("Usuário não encontrado", 404);
+  assertNotDemoAccount(user);
+
+  if (newEmail === user.email) {
+    throw new AppError("Este já é o seu e-mail atual", 400);
+  }
+
+  const existing = await prisma.user.findUnique({ where: { email: newEmail } });
+  if (existing) {
+    throw new AppError("Este e-mail já está em uso", 409);
+  }
+
+  const rawToken = crypto.randomBytes(32).toString("hex");
+  await prisma.user.update({
+    where: { id },
+    data: {
+      pendingEmail: newEmail,
+      pendingEmailTokenHash: hashToken(rawToken),
+      pendingEmailExpiresAt: new Date(Date.now() + EMAIL_CHANGE_TOKEN_TTL_MS),
+    },
+  });
+
+  const confirmUrl = `${process.env.FRONTEND_URL}/confirm-email-change?token=${rawToken}`;
+  await sendEmailChangeConfirmation(newEmail, confirmUrl);
+  await sendEmailChangeNotice(user.email, newEmail);
+
+  const result = { message: "Enviamos um link de confirmação para o novo e-mail" };
+
+  // Same non-production convenience as registerUser's devVerificationToken —
+  // nothing in local dev or the test suites can click a real e-mail link.
+  if (process.env.NODE_ENV !== "production") {
+    result.devEmailChangeToken = rawToken;
+  }
+
+  return result;
+}
+
+export async function confirmEmailChange(token) {
+  const user = await prisma.user.findFirst({
+    where: {
+      pendingEmailTokenHash: hashToken(token),
+      pendingEmailExpiresAt: { gt: new Date() },
+    },
+  });
+  if (!user) throw new AppError("Link inválido ou expirado", 400);
+
+  // Re-check availability at confirmation time, not just at request time —
+  // another account could have taken the same address in the meantime.
+  const existing = await prisma.user.findUnique({ where: { email: user.pendingEmail } });
+  if (existing && existing.id !== user.id) {
+    throw new AppError("Este e-mail já está em uso", 409);
+  }
+
+  const updated = await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      email: user.pendingEmail,
+      pendingEmail: null,
+      pendingEmailTokenHash: null,
+      pendingEmailExpiresAt: null,
+    },
+  });
+
+  // Same reasoning as verifyEmail: confirming is also the moment it's safe
+  // to consider the user "here", so hand back a usable token right away.
+  return { user: sanitizeUser(updated), token: signToken(updated.id) };
+}
+
+// Confirms via the CURRENT password rather than an e-mail code — the user is
+// already authenticated, so re-proving mailbox ownership would be pure
+// friction with no extra security (see issue #4's design notes).
+export async function changePassword(id, currentPassword, newPassword) {
+  const user = await prisma.user.findUnique({ where: { id } });
+  if (!user) throw new AppError("Usuário não encontrado", 404);
+  assertNotDemoAccount(user);
+
+  const passwordMatches = await bcrypt.compare(currentPassword, user.password);
+  if (!passwordMatches) throw new AppError("Senha atual incorreta", 401);
+
+  const hashedPassword = await bcrypt.hash(newPassword, SALT_ROUNDS);
+  await prisma.user.update({ where: { id }, data: { password: hashedPassword } });
+
+  await sendPasswordChangedEmail(user.email);
 }
 
 const DEMO_NAME = "Visitante Demo";
@@ -308,4 +427,8 @@ export async function resetPassword(token, newPassword) {
       resetPasswordExpiresAt: null,
     },
   });
+
+  // Security notice distinct from the reset-link e-mail sent above by
+  // requestPasswordReset — this one confirms the change actually happened.
+  await sendPasswordChangedEmail(user.email);
 }

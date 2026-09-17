@@ -43,3 +43,23 @@ export async function resendVerificationRequest(email) {
   const { data } = await apiClient.post("/auth/resend-verification", { email });
   return data;
 }
+
+export async function updateNameRequest(name) {
+  const { data } = await apiClient.patch("/auth/me", { name });
+  return data;
+}
+
+export async function requestEmailChangeRequest(email) {
+  const { data } = await apiClient.post("/auth/me/email", { email });
+  return data;
+}
+
+export async function confirmEmailChangeRequest(token) {
+  const { data } = await apiClient.post("/auth/confirm-email-change", { token });
+  return data;
+}
+
+export async function changePasswordRequest(currentPassword, newPassword) {
+  const { data } = await apiClient.post("/auth/me/password", { currentPassword, newPassword });
+  return data;
+}
