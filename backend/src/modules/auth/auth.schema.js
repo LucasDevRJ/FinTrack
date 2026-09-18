@@ -32,3 +32,21 @@ export const verifyEmailSchema = z.object({
 export const resendVerificationSchema = z.object({
   email: z.string().trim().toLowerCase().email("E-mail inválido"),
 });
+
+export const updateNameSchema = z.object({
+  name: z.string().trim().min(2, "Nome deve ter pelo menos 2 caracteres").max(100),
+});
+
+export const changeEmailSchema = z.object({
+  email: z.string().trim().toLowerCase().email("E-mail inválido"),
+});
+
+export const confirmEmailChangeSchema = z.object({
+  token: z.string().min(1, "Token é obrigatório"),
+});
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, "Senha atual é obrigatória"),
+  // bcrypt silently ignores bytes beyond 72, same cap as registerSchema.
+  newPassword: z.string().min(8, "Senha deve ter pelo menos 8 caracteres").max(72),
+});

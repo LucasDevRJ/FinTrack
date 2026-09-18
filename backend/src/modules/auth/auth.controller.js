@@ -84,3 +84,39 @@ export async function resendVerification(req, res, next) {
     next(err);
   }
 }
+
+export async function updateName(req, res, next) {
+  try {
+    const user = await authService.updateUserName(req.userId, req.body.name);
+    res.status(200).json({ user });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function requestEmailChange(req, res, next) {
+  try {
+    const result = await authService.requestEmailChange(req.userId, req.body.email);
+    res.status(200).json(result);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function confirmEmailChange(req, res, next) {
+  try {
+    const result = await authService.confirmEmailChange(req.body.token);
+    res.status(200).json(result);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function changePassword(req, res, next) {
+  try {
+    await authService.changePassword(req.userId, req.body.currentPassword, req.body.newPassword);
+    res.status(200).json({ message: "Senha alterada com sucesso" });
+  } catch (err) {
+    next(err);
+  }
+}

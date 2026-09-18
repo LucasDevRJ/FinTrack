@@ -4,12 +4,16 @@ import { authLimiter } from "../../middleware/rateLimit.js";
 import { validate } from "../../middleware/validate.js";
 import * as authController from "./auth.controller.js";
 import {
+  changeEmailSchema,
+  changePasswordSchema,
+  confirmEmailChangeSchema,
   deleteAccountSchema,
   forgotPasswordSchema,
   loginSchema,
   registerSchema,
   resendVerificationSchema,
   resetPasswordSchema,
+  updateNameSchema,
   verifyEmailSchema,
 } from "./auth.schema.js";
 
@@ -43,6 +47,27 @@ router.post(
   authLimiter,
   validate(resendVerificationSchema),
   authController.resendVerification,
+);
+router.patch("/me", protect, validate(updateNameSchema), authController.updateName);
+router.post(
+  "/me/email",
+  protect,
+  authLimiter,
+  validate(changeEmailSchema),
+  authController.requestEmailChange,
+);
+router.post(
+  "/confirm-email-change",
+  authLimiter,
+  validate(confirmEmailChangeSchema),
+  authController.confirmEmailChange,
+);
+router.post(
+  "/me/password",
+  protect,
+  authLimiter,
+  validate(changePasswordSchema),
+  authController.changePassword,
 );
 
 export default router;
