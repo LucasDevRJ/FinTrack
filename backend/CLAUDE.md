@@ -1,31 +1,31 @@
-# Backend architecture
+# Arquitetura do backend
 
-Each feature is a self-contained module under `backend/src/modules/<name>/`, always split the same four ways:
+Cada funcionalidade é um módulo autocontido em `backend/src/modules/<nome>/`, sempre dividido da mesma forma em quatro partes:
 
-- `*.routes.js` — Express router; wires middleware (`protect`, `validate(schema[, source])`) to controller methods
-- `*.controller.js` — thin: pulls `req.userId`/`req.body`/`req.params`/`req.query`, calls the service, sets the HTTP response. No business logic.
-- `*.service.js` — business logic and all Prisma calls
-- `*.schema.js` — Zod schemas used by `validate()` for request validation
+- `*.routes.js` — router do Express; conecta middlewares (`protect`, `validate(schema[, source])`) aos métodos do controller
+- `*.controller.js` — fino: pega `req.userId`/`req.body`/`req.params`/`req.query`, chama o service, define a resposta HTTP. Sem lógica de negócio.
+- `*.service.js` — lógica de negócio e todas as chamadas ao Prisma
+- `*.schema.js` — schemas Zod usados pelo `validate()` para validação de requisição
 
-Current modules: `auth`, `transactions`, `budgets`, `recurring`.
+Módulos atuais: `auth`, `transactions`, `budgets`, `recurring`.
 
-Cross-cutting pieces live outside `modules/`:
-- `src/middleware/auth.js` — `protect` reads `Authorization: Bearer <token>`, verifies it, sets `req.userId`
-- `src/middleware/validate.js` — Zod-parses `req.body`/`req.query`/`req.params` and replaces it with the parsed/typed value; validation failures become `ZodError`s forwarded to `next()`
-- `src/middleware/errorHandler.js` — central error handler: `ZodError` → 400 with per-field messages, `AppError` → its own status code, anything else → logged + 500
-- `src/utils/AppError.js` — `new AppError(message, statusCode)` for expected/handled errors (e.g. 404 "not found", 401 "invalid token")
-- `src/lib/prisma.js`, `src/lib/resend.js` — shared client singletons
+Peças transversais vivem fora de `modules/`:
+- `src/middleware/auth.js` — `protect` lê `Authorization: Bearer <token>`, verifica, define `req.userId`
+- `src/middleware/validate.js` — parseia `req.body`/`req.query`/`req.params` via Zod e substitui pelo valor validado/tipado; falhas de validação viram `ZodError`s encaminhados pro `next()`
+- `src/middleware/errorHandler.js` — tratador de erro central: `ZodError` → 400 com mensagem por campo, `AppError` → seu próprio status code, qualquer outro → logado + 500
+- `src/utils/AppError.js` — `new AppError(message, statusCode)` para erros esperados/tratados (ex.: 404 "não encontrado", 401 "token inválido")
+- `src/lib/prisma.js`, `src/lib/resend.js` — singletons de cliente compartilhados
 
-**Ownership pattern**: every resource lookup is scoped by `userId` in the Prisma `where` clause (e.g. `findFirst({ where: { id, userId } })`), and a miss is always a 404, never a 403 — this avoids leaking whether a resource exists for a different user. See `findOwnedTransaction` / `findOwnedRecurringTransaction` in the respective services.
+**Padrão de ownership**: toda busca de recurso é escopada por `userId` na cláusula `where` do Prisma (ex.: `findFirst({ where: { id, userId } })`), e um miss é sempre 404, nunca 403 — isso evita vazar se um recurso existe para outro usuário. Ver `findOwnedTransaction` / `findOwnedRecurringTransaction` nos respectivos services.
 
-**Route ordering**: static sub-paths (`/summary`, `/export`, `/import`) must be registered before `/:id` in a router, or Express matches them as the `:id` param and the UUID schema rejects them.
+**Ordem das rotas**: sub-rotas estáticas (`/summary`, `/export`, `/import`) precisam ser registradas antes de `/:id` no router, senão o Express as trata como o parâmetro `:id` e o schema de UUID as rejeita.
 
-**Date handling**: transaction dates are stored as UTC midnight for a calendar date. Reading them with local-timezone methods (`toLocaleDateString`, `getMonth()`) can shift the date by a day depending on server timezone (e.g. UTC-3 makes UTC midnight read as the previous day). Always bucket/format dates using the UTC getters (`getUTCFullYear()`, `getUTCMonth()`, `getUTCDate()`) — see `transactions.service.js` and `recurring.service.js` for the established pattern.
+**Tratamento de datas**: datas de transação são armazenadas como meia-noite UTC de uma data de calendário. Lê-las com métodos de timezone local (`toLocaleDateString`, `getMonth()`) pode deslocar a data em um dia dependendo do timezone do servidor (ex.: UTC-3 faz meia-noite UTC ser lida como o dia anterior). Sempre agrupar/formatar datas usando os getters UTC (`getUTCFullYear()`, `getUTCMonth()`, `getUTCDate()`) — ver `transactions.service.js` e `recurring.service.js` para o padrão já estabelecido.
 
-**Recurring transactions have no scheduler/cron** (Railway backend has no worker service). Instead, `recurring.service.js` generates past-due occurrences lazily: every read path that touches transaction data (transactions list, dashboard summary, CSV export, budget progress, and the recurring list itself) first calls `generateDueRecurringTransactions(userId)`, which walks each active template month-by-month from `lastGeneratedDate` (or `startDate`) up to today, materializes any due occurrences as real `Transaction` rows, and stamps `lastGeneratedDate`. This makes repeat calls a cheap no-op once caught up. `dayOfMonth` is clamped to the actual last day of shorter months (e.g. 31 → Feb 28/29).
+**Transações recorrentes não têm scheduler/cron** (o backend na Railway não tem serviço de worker). Em vez disso, `recurring.service.js` gera as ocorrências vencidas de forma preguiçosa (lazy): todo caminho de leitura que toca dados de transação (lista de transações, resumo do dashboard, exportação CSV, progresso de orçamento, e a própria lista de recorrências) primeiro chama `generateDueRecurringTransactions(userId)`, que percorre cada template ativo mês a mês desde `lastGeneratedDate` (ou `startDate`) até hoje, materializa qualquer ocorrência vencida como uma linha real de `Transaction`, e grava `lastGeneratedDate`. Isso faz chamadas repetidas serem um no-op barato assim que está em dia. `dayOfMonth` é limitado ao último dia real de meses mais curtos (ex.: 31 → 28/29 de fevereiro).
 
-**CSV import/export**: `express.json()` limit is raised to 2mb (default 100kb) specifically because CSV import content is JSON-escaped inside the request body and can hold up to `MAX_IMPORT_ROWS` rows. Export responses set `Content-Disposition`, which requires the CORS `exposedHeaders` allow-list in `app.js` for the frontend to read it.
+**Importação/exportação de CSV**: o limite do `express.json()` é elevado para 2mb (padrão é 100kb) especificamente porque o conteúdo da importação de CSV vem com escape JSON dentro do corpo da requisição e pode conter até `MAX_IMPORT_ROWS` linhas. As respostas de exportação definem `Content-Disposition`, o que exige a allow-list `exposedHeaders` do CORS em `app.js` para o frontend conseguir lê-lo.
 
-**Backend runs behind Railway's reverse proxy** — `app.set("trust proxy", 1)` in `app.js` is required for `express-rate-limit` (and anything else reading `req.ip`) to see the real client IP instead of the proxy's.
+**O backend roda atrás do proxy reverso da Railway** — `app.set("trust proxy", 1)` em `app.js` é necessário para que o `express-rate-limit` (e qualquer outra coisa que leia `req.ip`) veja o IP real do cliente em vez do IP do proxy.
 
-Commands, integration-test DB setup, and general repo conventions: see the root `CLAUDE.md` and `AGENTS.md`.
+Comandos, configuração do banco de teste de integração, e convenções gerais do repositório: ver o `CLAUDE.md` raiz e o `AGENTS.md`.

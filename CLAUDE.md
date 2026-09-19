@@ -1,35 +1,35 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Este arquivo orienta o Claude Code (claude.ai/code) ao trabalhar com código neste repositório.
 
-## Project
+## Projeto
 
-FinTrack is a full-stack personal finance manager (Portuguese-language product, portfolio project held to production quality: real deploy, automated tests, organized commit/PR history). See `README.md` for the feature list and stack table.
+FinTrack é um gerenciador de finanças pessoais full-stack (produto em português, projeto de portfólio mantido em padrão de produção: deploy real, testes automatizados, histórico de commits/PRs organizado). Ver `README.md` para a lista de funcionalidades e a tabela de stack.
 
-## Commands
+## Comandos
 
-### Local environment
+### Ambiente local
 
 ```bash
-docker compose up -d          # Postgres on localhost:5433 (repo root)
+docker compose up -d          # Postgres em localhost:5433 (raiz do repo)
 ```
 
-Backend/frontend/E2E commands: `npm install && npm run dev` in each of `backend/`, `frontend/`, `e2e/` — see each package's `scripts` block (`backend/package.json`, `frontend/package.json`, `e2e/package.json`) for the full list (tests, lint, Prisma, etc.).
+Comandos de backend/frontend/E2E: `npm install && npm run dev` em cada um de `backend/`, `frontend/`, `e2e/` — ver o bloco `scripts` de cada pacote (`backend/package.json`, `frontend/package.json`, `e2e/package.json`) para a lista completa (testes, lint, Prisma, etc.).
 
-Test files run with `fileParallelism: false` (see `backend/vitest.config.js`) because integration tests share one Postgres test DB — setup steps are in the root `README.md`'s "Testes" section.
+Os arquivos de teste rodam com `fileParallelism: false` (ver `backend/vitest.config.js`) porque os testes de integração compartilham um único banco de teste do Postgres — os passos de configuração estão na seção "Testes" do `README.md` raiz.
 
-E2E gotchas (worker count, data strategy): see `e2e/README.md`.
+Particularidades do E2E (número de workers, estratégia de dados): ver `e2e/README.md`.
 
-CI (GitHub Actions, `.github/workflows/`) runs backend tests and E2E on every PR/push to `main`.
+CI (GitHub Actions, `.github/workflows/`) roda os testes de backend e o E2E em todo PR/push para `main`.
 
-## Backend architecture
+## Arquitetura do backend
 
-See `backend/CLAUDE.md`.
+Ver `backend/CLAUDE.md`.
 
-## Frontend architecture
+## Arquitetura do frontend
 
-See `frontend/CLAUDE.md`.
+Ver `frontend/CLAUDE.md`.
 
-## Workflow conventions
+## Convenções de workflow
 
-See `AGENTS.md`.
+Ver `AGENTS.md`.
