@@ -72,5 +72,8 @@ Resumo das decisões de produto já discutidas e acordadas para itens que ainda 
 
 ## Loose ends conhecidos
 
-- A issue [#41](https://github.com/LucasDevRJ/FinTrack/issues/41) (verificação de e-mail no cadastro) tem o código já mergeado em `main`, mas continua **aberta** no GitHub — o PR aparentemente não referenciou `Closes #41`. Vale fechar manualmente.
 - Não existe endpoint de "purge" de contas de teste em produção — os scripts pontuais (`delete-user.js`) descritos acima são o único caminho hoje.
+
+## Lição aprendida: fechamento de issues
+
+A issue [#41](https://github.com/LucasDevRJ/FinTrack/issues/41) (verificação de e-mail no cadastro) ficou com o código mergeado em `main` mas a issue **aberta** no GitHub por um bom tempo — o PR aparentemente não referenciou `Closes #41` no corpo, então o merge não fechou ela automaticamente. Fechada manualmente em 2026-09-19. **Vale conferir, ao abrir um PR, que a issue certa está referenciada** (`Closes #N`) para o fechamento automático funcionar — não custa nada checar rapidamente depois do merge se a issue realmente fechou.
