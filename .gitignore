@@ -24,3 +24,6 @@ backend/prisma/dev.db
 # IDE
 .idea/
 *.iml
+# Claude Code (configs locais/pessoais; .claude/skills é versionado)
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
