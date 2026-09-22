@@ -17,6 +17,11 @@ Este arquivo orienta qualquer agente de IA (Claude Code, Codex, Cursor etc.) faz
 - **Arquitetura, convenções de código e lista completa de comandos** (dev/test/build de cada pacote, scripts do Prisma etc.): `CLAUDE.md`, na raiz do repo. Leia antes de mexer em módulos do backend, autenticação, recorrência ou qualquer lógica de datas.
 - **Este arquivo (`AGENTS.md`)** cobre processo/workflow e o comportamento esperado do agente durante a sessão — não arquitetura.
 - Não duplicar conteúdo entre os dois: mudança de arquitetura/código → só `CLAUDE.md`; mudança de processo/workflow → só este arquivo.
+- **Roteiros passo a passo (Skills do Claude Code)**: `.claude/skills/<nome>/SKILL.md`, carregados sob demanda quando a tarefa bate com a `description` de cada um. `CLAUDE.md`/`AGENTS.md` dizem *o que* é regra; as skills dizem *como executar* — referenciam esses arquivos em vez de copiar deles.
+  - `start-issue` — Issue com label + branch `<tipo>/<n>-<slug>` (início de todo trabalho)
+  - `backend-module` — módulo/endpoint novo no backend, ponta a ponta até o wrapper do frontend
+  - `e2e-spec` — spec Playwright novo seguindo os helpers e a estratégia de dados do `e2e/`
+  - `ship-pr` — push → PR `Closes #N` → CI verde → squash merge (com confirmação) + delete da branch
 
 ## Comandos essenciais
 
@@ -46,6 +51,8 @@ Trabalho não-código (ex.: planejamento de marketing/conteúdo) usa só a Issue
 ## Manter este arquivo vivo
 
 Sempre que o processo de trabalho mudar (novo tipo de branch, novo label, novo critério de review), **atualizar este `AGENTS.md` na mesma mudança que altera o processo**, seguindo o mesmo fluxo issue → branch → PR → merge descrito acima. Tratar este arquivo como código — se ele ficar desatualizado, o próximo agente vai seguir um processo que não é mais o real.
+
+O mesmo vale para as skills em `.claude/skills/`: mudou o processo (ex.: novo label, novo tipo de branch) ou uma convenção que uma skill cita (ex.: novo passo ao criar módulo) → atualizar a skill afetada no mesmo PR. Se, durante uma tarefa, a skill se mostrar errada ou incompleta, corrigir a skill faz parte da tarefa.
 
 ## Comportamento esperado do agente
 
