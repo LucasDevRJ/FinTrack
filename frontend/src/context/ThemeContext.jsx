@@ -31,6 +31,7 @@ export function ThemeProvider({ children }) {
   return <ThemeContext.Provider value={{ theme, toggleTheme }}>{children}</ThemeContext.Provider>;
 }
 
+// oxlint-disable-next-line react/only-export-components -- Provider + hook live together on purpose; the only cost is a full reload (not HMR) when editing this file in dev.
 export function useTheme() {
   const context = useContext(ThemeContext);
   if (!context) {

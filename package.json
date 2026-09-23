@@ -1,12 +1,14 @@
 {
   "name": "fintrack-tooling",
   "private": true,
-  "description": "Ferramentas de desenvolvimento do monorepo (formatação). Não é usado pelos deploys: Railway usa backend/ e Vercel usa frontend/ como raiz.",
+  "description": "Ferramentas de desenvolvimento do monorepo (formatação e lint). Não é usado pelos deploys: Railway usa backend/ e Vercel usa frontend/ como raiz.",
   "scripts": {
     "format": "prettier --write \"**/*.{js,jsx}\"",
-    "format:check": "prettier --check \"**/*.{js,jsx}\""
+    "format:check": "prettier --check \"**/*.{js,jsx}\"",
+    "lint": "oxlint --deny-warnings"
   },
   "devDependencies": {
+    "oxlint": "1.76.0",
     "prettier": "3.9.8"
   }
 }

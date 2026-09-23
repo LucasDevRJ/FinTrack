@@ -1,0 +1,7 @@
+# Commits só de formatação, ignorados pelo `git blame` para que ele aponte
+# quem escreveu a lógica, não quem rodou o formatador.
+# O GitHub usa este arquivo automaticamente; localmente, uma vez por clone:
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+# chore: padroniza formatação do código com Prettier (#66) (#68)
+eee61eeed6f9d351a29a640c8e96160044ae2da0

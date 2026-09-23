@@ -1,0 +1,42 @@
+name: Code quality
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# Prettier e oxlint ficam no package.json da raiz (tooling do monorepo), com
+# versões exatas — config em .prettierrc.json e .oxlintrc.json.
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Install tooling dependencies
+        run: npm ci
+      - name: Check formatting
+        run: npm run format:check
+
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Install tooling dependencies
+        run: npm ci
+      # --deny-warnings: aviso também falha — aviso que nunca quebra nada
+      # acumula e vira ruído ignorado.
+      - name: Lint
+        run: npm run lint

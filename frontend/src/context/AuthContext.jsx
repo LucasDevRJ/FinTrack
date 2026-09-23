@@ -114,6 +114,7 @@ export function AuthProvider({ children }) {
   );
 }
 
+// oxlint-disable-next-line react/only-export-components -- Provider + hook live together on purpose; the only cost is a full reload (not HMR) when editing this file in dev.
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
