@@ -21,6 +21,27 @@ function newUser(overrides = {}) {
   };
 }
 
+// Exact key list rather than toMatchObject, which ignores extra keys — an
+// extra key is precisely what leaks (#90).
+const PUBLIC_USER_KEYS = ["createdAt", "email", "emailVerifiedAt", "id", "name", "updatedAt"];
+
+describe("user payload in auth responses", () => {
+  it("register returns only public fields, even while a verification token is pending", async () => {
+    const res = await request(app).post("/api/auth/register").send(newUser());
+
+    expect(res.status).toBe(201);
+    expect(Object.keys(res.body.user).sort()).toEqual(PUBLIC_USER_KEYS);
+  });
+
+  it("GET /api/auth/me returns only public fields", async () => {
+    const { token } = await createAuthenticatedUser();
+    const res = await request(app).get("/api/auth/me").set(authHeader(token));
+
+    expect(res.status).toBe(200);
+    expect(Object.keys(res.body.user).sort()).toEqual(PUBLIC_USER_KEYS);
+  });
+});
+
 describe("POST /api/auth/register", () => {
   it("does not return a usable token, but includes devVerificationToken outside production", async () => {
     const user = newUser();
