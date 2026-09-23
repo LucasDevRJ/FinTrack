@@ -32,7 +32,7 @@ git config blame.ignoreRevsFile .git-blame-ignore-revs   # uma vez por clone
 
 Config em `.prettierrc.json` (só o que difere do padrão do Prettier). Não formatar à mão nem discutir estilo mecânico em revisão — o Prettier decide. Markdown/YAML ficam fora do Prettier de propósito.
 
-Lint em `.oxlintrc.json` (regras de React só em `frontend/**`, via `overrides`). Aviso que é falso positivo se resolve na regra (ex.: `ignoreRestSiblings` para o padrão `const { password, ...safe } = user`) ou com `// oxlint-disable-next-line <regra> -- <motivo>` na linha — nunca seguindo a sugestão do linter no automático: remover o `next` não usado do `errorHandler` quebraria o Express, que reconhece error handler pela aridade 4 (por isso `_next`).
+Lint em `.oxlintrc.json` (regras de React só em `frontend/**`, via `overrides`). Aviso que é falso positivo se resolve na regra (ex.: `ignoreRestSiblings`, que aceita descartar campos com `const { a, ...rest } = obj`) ou com `// oxlint-disable-next-line <regra> -- <motivo>` na linha — nunca seguindo a sugestão do linter no automático: remover o `next` não usado do `errorHandler` quebraria o Express, que reconhece error handler pela aridade 4 (por isso `_next`).
 
 Commits só de formatação vão para `.git-blame-ignore-revs` (hash do squash, depois do merge).
 

@@ -19,6 +19,8 @@ Peças transversais vivem fora de `modules/`:
 
 **Padrão de ownership**: toda busca de recurso é escopada por `userId` na cláusula `where` do Prisma (ex.: `findFirst({ where: { id, userId } })`), e um miss é sempre 404, nunca 403 — isso evita vazar se um recurso existe para outro usuário. Ver `findOwnedTransaction` / `findOwnedRecurringTransaction` nos respectivos services.
 
+**Serialização de respostas**: `serialize<Recurso>` converte o objeto do Prisma para a resposta (ex.: `Decimal` → `Number`). Para o `User`, `serializeUser` (`auth.service.js`) é uma **lista de inclusão** de campos: o model guarda senha, hashes de token e troca de e-mail pendente, e com lista de exclusão (`const { password, ...rest } = user`) todo campo interno novo vazaria em todas as respostas de auth (#90). Model com dado sensível novo segue o mesmo modelo.
+
 **Mensagens de validação**: schema sem mensagem própria já responde em português pelo error map global, então só escreva mensagem quando ela precisar ser mais específica que a genérica (ex.: "E-mail inválido", "Senha deve ter pelo menos 8 caracteres"). Nunca passe `errorMap` na chamada (`schema.parse(data, { errorMap })`): no Zod 3 o map por chamada tem prioridade sobre `required_error`/`invalid_type_error`/`errorMap` do próprio schema e apagaria essas mensagens; o global fica abaixo delas. Ver `tests/unit/zodErrorMap.test.js`.
 
 **Ordem das rotas**: sub-rotas estáticas (`/summary`, `/export`, `/import`) precisam ser registradas antes de `/:id` no router, senão o Express as trata como o parâmetro `:id` e o schema de UUID as rejeita.
