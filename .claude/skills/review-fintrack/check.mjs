@@ -165,6 +165,16 @@ for (const [file, lines] of added) {
         );
     }
 
+    // Float money: 77.9 * 100 isn't an integer, which rejected ~9% of valid amounts (#97).
+    if (isCode(file) && /Number\.isInteger\([^)]*\*\s*100\b/.test(code))
+      report(
+        "erro",
+        file,
+        line,
+        "dinheiro",
+        "`Number.isInteger(x * 100)` falha por ponto flutuante (77.9 * 100 = 7790.000000000001) — compare com o valor arredondado: `Number(x.toFixed(2)) === x` (backend/CLAUDE.md: Dinheiro e ponto flutuante)."
+      );
+
     // "Today" via toISOString() is the UTC day — tomorrow after 21h in Brasília (#82).
     if (file.startsWith("frontend/src/") && /toISOString\(\)\.(slice|substring|split)\(/.test(code))
       report(
