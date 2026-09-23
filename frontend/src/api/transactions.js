@@ -1,3 +1,4 @@
+import { todayInputValue } from "../utils/date.js";
 import apiClient from "./client.js";
 
 export async function getSummaryRequest() {
@@ -39,7 +40,7 @@ export async function exportTransactionsRequest(filters = {}) {
   const disposition = response.headers["content-disposition"] ?? "";
   const filename =
     disposition.match(/filename="?([^"]+)"?/)?.[1] ??
-    `fintrack-transacoes-${new Date().toISOString().slice(0, 10)}.csv`;
+    `fintrack-transacoes-${todayInputValue()}.csv`;
 
   const url = URL.createObjectURL(response.data);
   const link = document.createElement("a");

@@ -1,13 +1,10 @@
 import { useState } from "react";
+import { toDateInputValue } from "../utils/date.js";
 
 const TYPE_OPTIONS = [
   { value: "EXPENSE", label: "Despesa" },
   { value: "INCOME", label: "Receita" },
 ];
-
-function toDateInputValue(isoDate) {
-  return isoDate ? isoDate.slice(0, 10) : new Date().toISOString().slice(0, 10);
-}
 
 export default function RecurringTransactionForm({
   initialValues,
