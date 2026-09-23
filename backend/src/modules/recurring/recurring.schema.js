@@ -15,7 +15,10 @@ const dayOfMonthSchema = z.coerce
 export const createRecurringTransactionSchema = z
   .object({
     type: typeSchema,
-    amount: moneyAmountSchema,
+    // Same .nullable() reasoning as endDate below: the form sends
+    // `amount: null` for a variable-amount template.
+    amount: moneyAmountSchema.optional().nullable(),
+    variableAmount: z.boolean().optional().default(false),
     category: categorySchema,
     description: z.string().trim().max(500).optional(),
     dayOfMonth: dayOfMonthSchema,
@@ -31,6 +34,14 @@ export const createRecurringTransactionSchema = z
   .refine((data) => !data.endDate || data.startDate <= data.endDate, {
     message: "Data final deve ser posterior ou igual à data inicial",
     path: ["endDate"],
+  })
+  .refine((data) => data.variableAmount || data.amount != null, {
+    message: "Informe o valor da recorrência",
+    path: ["amount"],
+  })
+  .refine((data) => !data.variableAmount || data.amount == null, {
+    message: "Recorrência de valor variável não tem valor fixo",
+    path: ["amount"],
   });
 
 // Not built via createRecurringTransactionSchema.partial() — that schema is
@@ -47,6 +58,12 @@ export const updateRecurringTransactionSchema = z
     startDate: z.coerce.date({ invalid_type_error: "Data inicial inválida" }).optional(),
     endDate: z.coerce.date({ invalid_type_error: "Data final inválida" }).optional().nullable(),
     active: z.boolean().optional(),
+    // Fixed at creation — see the variableAmount note in schema.prisma.
+    variableAmount: z
+      .never({
+        invalid_type_error: "O tipo de valor não pode ser alterado; crie outra recorrência",
+      })
+      .optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {
     message: "Informe ao menos um campo para atualizar",
@@ -58,4 +75,17 @@ export const updateRecurringTransactionSchema = z
 
 export const idParamSchema = z.object({
   id: z.string().uuid("ID inválido"),
+});
+
+const dueDateSchema = z.coerce.date();
+
+export const confirmOccurrenceSchema = z.object({
+  dueDate: dueDateSchema,
+  amount: moneyAmountSchema,
+  // The day it was actually paid; defaults to the due date when omitted.
+  date: z.coerce.date().optional(),
+});
+
+export const skipOccurrenceSchema = z.object({
+  dueDate: dueDateSchema,
 });

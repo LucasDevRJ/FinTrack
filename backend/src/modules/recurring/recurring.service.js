@@ -1,8 +1,13 @@
 import prisma from "../../lib/prisma.js";
 import { AppError } from "../../utils/AppError.js";
 
+// Estimates average the most recent confirmations rather than the whole
+// history: utility bills drift (seasons, tariff changes), so old months would
+// drag the reference away from what the next bill is likely to be.
+const ESTIMATE_SAMPLE_SIZE = 3;
+
 function serializeRecurringTransaction(template) {
-  return { ...template, amount: Number(template.amount) };
+  return { ...template, amount: template.amount === null ? null : Number(template.amount) };
 }
 
 // Same ownership-scoping pattern as transactions.service.js's
@@ -32,7 +37,10 @@ export async function listRecurringTransactions(userId) {
 }
 
 export async function updateRecurringTransaction(userId, id, data) {
-  await findOwnedRecurringTransaction(userId, id);
+  const existing = await findOwnedRecurringTransaction(userId, id);
+  if (existing.variableAmount && data.amount !== undefined) {
+    throw new AppError("Recorrência de valor variável não tem valor fixo", 400);
+  }
   const template = await prisma.recurringTransaction.update({ where: { id }, data });
   return serializeRecurringTransaction(template);
 }
@@ -110,11 +118,19 @@ export function dueOccurrencesForTemplate(template, todayUtc) {
   return occurrences;
 }
 
-export async function generateDueRecurringTransactions(userId) {
+function currentDateUtc() {
   const now = new Date();
-  const todayUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+}
 
-  const templates = await prisma.recurringTransaction.findMany({ where: { userId, active: true } });
+export async function generateDueRecurringTransactions(userId) {
+  const todayUtc = currentDateUtc();
+
+  // Variable-amount templates are excluded on purpose: they never generate a
+  // transaction on their own (see listPendingOccurrences below).
+  const templates = await prisma.recurringTransaction.findMany({
+    where: { userId, active: true, variableAmount: false },
+  });
 
   for (const template of templates) {
     const occurrences = dueOccurrencesForTemplate(template, todayUtc);
@@ -140,4 +156,109 @@ export async function generateDueRecurringTransactions(userId) {
       }),
     ]);
   }
+}
+
+// --- Variable-amount occurrences (#32) ---
+//
+// Pending occurrences aren't stored: they're every due date since startDate
+// minus the ones already resolved (a RecurringOccurrence row, confirmed or
+// skipped). lastGeneratedDate is never set on these templates, so it's
+// ignored here and dueOccurrencesForTemplate walks from startDate.
+export function pendingDueDates(template, resolvedDueDates, todayUtc) {
+  const resolved = new Set(resolvedDueDates.map((date) => new Date(date).getTime()));
+  return dueOccurrencesForTemplate({ ...template, lastGeneratedDate: null }, todayUtc).filter(
+    (date) => !resolved.has(date.getTime())
+  );
+}
+
+export function estimateAmount(recentAmounts) {
+  if (recentAmounts.length === 0) return null;
+  const total = recentAmounts.reduce((sum, amount) => sum + Number(amount), 0);
+  return Math.round((total / recentAmounts.length) * 100) / 100;
+}
+
+export async function listPendingOccurrences(userId) {
+  const todayUtc = currentDateUtc();
+  const templates = await prisma.recurringTransaction.findMany({
+    where: { userId, active: true, variableAmount: true },
+    include: {
+      occurrences: { select: { dueDate: true } },
+      // A variable template's linked transactions are exactly its confirmed
+      // occurrences, so these are the latest confirmed amounts.
+      transactions: {
+        select: { amount: true },
+        orderBy: { date: "desc" },
+        take: ESTIMATE_SAMPLE_SIZE,
+      },
+    },
+  });
+
+  return templates
+    .flatMap((template) => {
+      const estimatedAmount = estimateAmount(template.transactions.map((t) => t.amount));
+      const resolved = template.occurrences.map((occurrence) => occurrence.dueDate);
+      return pendingDueDates(template, resolved, todayUtc).map((dueDate) => ({
+        recurringTransactionId: template.id,
+        dueDate,
+        type: template.type,
+        category: template.category,
+        description: template.description,
+        estimatedAmount,
+      }));
+    })
+    .sort((a, b) => a.dueDate - b.dueDate);
+}
+
+async function findResolvableOccurrence(userId, id, dueDate) {
+  const template = await findOwnedRecurringTransaction(userId, id);
+  if (!template.variableAmount) {
+    throw new AppError("Só recorrências de valor variável têm pendências", 400);
+  }
+
+  const isDue = dueOccurrencesForTemplate(
+    { ...template, lastGeneratedDate: null },
+    currentDateUtc()
+  ).some((date) => date.getTime() === dueDate.getTime());
+  if (!isDue) throw new AppError("Esta recorrência não tem vencimento nessa data", 400);
+
+  const alreadyResolved = await prisma.recurringOccurrence.findUnique({
+    where: { recurringTransactionId_dueDate: { recurringTransactionId: id, dueDate } },
+  });
+  if (alreadyResolved) throw new AppError("Este vencimento já foi resolvido", 409);
+
+  return template;
+}
+
+export async function confirmOccurrence(userId, id, { dueDate, amount, date }) {
+  const template = await findResolvableOccurrence(userId, id, dueDate);
+
+  // Nested create: the occurrence and its transaction land together or not at all.
+  const occurrence = await prisma.recurringOccurrence.create({
+    data: {
+      dueDate,
+      status: "CONFIRMED",
+      recurringTransaction: { connect: { id } },
+      transaction: {
+        create: {
+          type: template.type,
+          amount,
+          category: template.category,
+          description: template.description,
+          date: date ?? dueDate,
+          user: { connect: { id: userId } },
+          recurringTransaction: { connect: { id } },
+        },
+      },
+    },
+    include: { transaction: true },
+  });
+
+  return { ...occurrence.transaction, amount: Number(occurrence.transaction.amount) };
+}
+
+export async function skipOccurrence(userId, id, { dueDate }) {
+  await findResolvableOccurrence(userId, id, dueDate);
+  await prisma.recurringOccurrence.create({
+    data: { dueDate, status: "SKIPPED", recurringTransactionId: id },
+  });
 }
