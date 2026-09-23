@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { toDateInputValue } from "../utils/date.js";
 
+const AMOUNT_KIND_OPTIONS = [
+  { value: "fixed", label: "Fixo" },
+  { value: "variable", label: "Variável (água, luz, gás...)" },
+];
+
 const TYPE_OPTIONS = [
   { value: "EXPENSE", label: "Despesa" },
   { value: "INCOME", label: "Receita" },
@@ -14,6 +19,7 @@ export default function RecurringTransactionForm({
   error,
 }) {
   const [type, setType] = useState(initialValues?.type ?? "EXPENSE");
+  const [variableAmount, setVariableAmount] = useState(initialValues?.variableAmount ?? false);
   const [amount, setAmount] = useState(initialValues?.amount ?? "");
   const [category, setCategory] = useState(initialValues?.category ?? "");
   const [description, setDescription] = useState(initialValues?.description ?? "");
@@ -28,7 +34,10 @@ export default function RecurringTransactionForm({
     event.preventDefault();
     onSubmit({
       type,
-      amount: Number(amount),
+      // A variable-amount template has no amount, and its kind can't change
+      // after creation (the API rejects both), so edits never send either.
+      ...(variableAmount ? {} : { amount: Number(amount) }),
+      ...(initialValues ? {} : { variableAmount }),
       category,
       description: description.trim() || undefined,
       dayOfMonth: Number(dayOfMonth),
@@ -64,22 +73,53 @@ export default function RecurringTransactionForm({
 
         <div>
           <label
-            htmlFor="recurring-amount"
+            htmlFor="recurring-amount-kind"
             className="block text-sm font-medium text-gray-700 dark:text-gray-300"
           >
-            Valor
+            Tipo de valor
           </label>
-          <input
-            id="recurring-amount"
-            type="number"
-            step="0.01"
-            min="0.01"
-            required
-            value={amount}
-            onChange={(event) => setAmount(event.target.value)}
-            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
-          />
+          <select
+            id="recurring-amount-kind"
+            value={variableAmount ? "variable" : "fixed"}
+            onChange={(event) => setVariableAmount(event.target.value === "variable")}
+            disabled={Boolean(initialValues)}
+            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 disabled:opacity-60"
+          >
+            {AMOUNT_KIND_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            {initialValues
+              ? "Não pode ser alterado depois de criado."
+              : variableAmount
+                ? "Todo mês fica pendente até você confirmar o valor real da conta."
+                : "Gera a transação automaticamente todo mês com o mesmo valor."}
+          </p>
         </div>
+
+        {!variableAmount && (
+          <div>
+            <label
+              htmlFor="recurring-amount"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              Valor
+            </label>
+            <input
+              id="recurring-amount"
+              type="number"
+              step="0.01"
+              min="0.01"
+              required
+              value={amount}
+              onChange={(event) => setAmount(event.target.value)}
+              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+            />
+          </div>
+        )}
 
         <div>
           <label

@@ -1,11 +1,15 @@
 import { useEffect, useState } from "react";
 import {
+  confirmOccurrenceRequest,
   createRecurringTransactionRequest,
   deleteRecurringTransactionRequest,
+  listPendingOccurrencesRequest,
   listRecurringTransactionsRequest,
+  skipOccurrenceRequest,
   updateRecurringTransactionRequest,
 } from "../api/recurring.js";
 import Header from "../components/Header.jsx";
+import PendingOccurrenceCard from "../components/PendingOccurrenceCard.jsx";
 import RecurringTransactionForm from "../components/RecurringTransactionForm.jsx";
 import { useTheme } from "../context/ThemeContext.jsx";
 import { formatCurrency } from "../utils/currency.js";
@@ -21,6 +25,7 @@ import {
 export default function RecurringPage() {
   const { theme } = useTheme();
   const [templates, setTemplates] = useState(null);
+  const [pendingOccurrences, setPendingOccurrences] = useState([]);
   const [loadError, setLoadError] = useState("");
   const [actionError, setActionError] = useState("");
   const [editingTemplate, setEditingTemplate] = useState(null);
@@ -29,8 +34,11 @@ export default function RecurringPage() {
   const [confirmingDeleteId, setConfirmingDeleteId] = useState(null);
 
   function loadTemplates() {
-    return listRecurringTransactionsRequest()
-      .then(setTemplates)
+    return Promise.all([listRecurringTransactionsRequest(), listPendingOccurrencesRequest()])
+      .then(([loadedTemplates, loadedPending]) => {
+        setTemplates(loadedTemplates);
+        setPendingOccurrences(loadedPending);
+      })
       .catch(() => setLoadError("Não foi possível carregar as transações recorrentes"));
   }
 
@@ -68,6 +76,19 @@ export default function RecurringPage() {
       closeForm();
     } catch (err) {
       setActionError(getErrorMessage(err, "Não foi possível salvar a transação recorrente"));
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function handleResolveOccurrence(occurrence, request, values, fallbackMessage) {
+    setIsSubmitting(true);
+    setActionError("");
+    try {
+      await request(occurrence.recurringTransactionId, values);
+      await loadTemplates();
+    } catch (err) {
+      setActionError(getErrorMessage(err, fallbackMessage));
     } finally {
       setIsSubmitting(false);
     }
@@ -121,6 +142,43 @@ export default function RecurringPage() {
           <p className="mb-4 text-sm text-red-600 dark:text-red-400">{actionError}</p>
         )}
 
+        {pendingOccurrences.length > 0 && (
+          <div className="mb-8">
+            <h3 className="mb-1 text-lg font-semibold text-gray-900 dark:text-gray-100">
+              Contas a confirmar
+            </h3>
+            <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
+              Contas de valor variável só entram no saldo e nas metas depois que você informa o
+              valor real.
+            </p>
+            <div className="space-y-4">
+              {pendingOccurrences.map((occurrence) => (
+                <PendingOccurrenceCard
+                  key={`${occurrence.recurringTransactionId}-${occurrence.dueDate}`}
+                  occurrence={occurrence}
+                  isSubmitting={isSubmitting}
+                  onConfirm={(values) =>
+                    handleResolveOccurrence(
+                      occurrence,
+                      confirmOccurrenceRequest,
+                      values,
+                      "Não foi possível confirmar o valor"
+                    )
+                  }
+                  onSkip={(values) =>
+                    handleResolveOccurrence(
+                      occurrence,
+                      skipOccurrenceRequest,
+                      values,
+                      "Não foi possível pular este mês"
+                    )
+                  }
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
         {!loadError && !templates && (
           <p className="text-gray-500 dark:text-gray-400">Carregando...</p>
         )}
@@ -128,7 +186,8 @@ export default function RecurringPage() {
         {templates && templates.length === 0 && (
           <p className="text-gray-500 dark:text-gray-400">
             Nenhuma recorrência cadastrada ainda. Cadastre aluguel, assinaturas ou salário para
-            gerar a transação automaticamente todo mês, sem precisar recriar o lançamento.
+            gerar a transação automaticamente todo mês, ou contas de valor variável (água, luz) para
+            confirmar o valor real a cada mês.
           </p>
         )}
 
@@ -193,22 +252,28 @@ export default function RecurringPage() {
                     Todo dia {template.dayOfMonth} · desde {formatDate(template.startDate)}
                     {template.endDate && <> · até {formatDate(template.endDate)}</>}
                   </p>
-                  <p
-                    className="font-medium"
-                    style={{
-                      color:
-                        template.type === "INCOME"
-                          ? theme === "dark"
-                            ? INCOME_COLOR_DARK
-                            : INCOME_COLOR
-                          : theme === "dark"
-                            ? EXPENSE_COLOR_DARK
-                            : EXPENSE_COLOR,
-                    }}
-                  >
-                    {template.type === "INCOME" ? "+ " : "- "}
-                    {formatCurrency(template.amount)}
-                  </p>
+                  {template.variableAmount ? (
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                      Valor variável
+                    </p>
+                  ) : (
+                    <p
+                      className="font-medium"
+                      style={{
+                        color:
+                          template.type === "INCOME"
+                            ? theme === "dark"
+                              ? INCOME_COLOR_DARK
+                              : INCOME_COLOR
+                            : theme === "dark"
+                              ? EXPENSE_COLOR_DARK
+                              : EXPENSE_COLOR,
+                      }}
+                    >
+                      {template.type === "INCOME" ? "+ " : "- "}
+                      {formatCurrency(template.amount)}
+                    </p>
+                  )}
                 </div>
               </div>
             ))}
