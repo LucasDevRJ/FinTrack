@@ -19,6 +19,8 @@ git log main..HEAD --oneline       # os commits incrementais estão aqui
 
 Sempre, na raiz: `npm run format:check` (se falhar, `npm run format` e commit `style: ...`) e `npm run lint`.
 
+Se a mudança toca código (não só docs), rode a skill `review-fintrack` e resolva os achados que bloqueiam o merge antes de abrir o PR. Mencione no plano de testes do PR que a revisão foi feita.
+
 Rode os testes do que foi tocado:
 
 - `backend/` mudou → `cd backend && npm test`

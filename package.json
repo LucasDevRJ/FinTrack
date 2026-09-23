@@ -3,8 +3,8 @@
   "private": true,
   "description": "Ferramentas de desenvolvimento do monorepo (formatação e lint). Não é usado pelos deploys: Railway usa backend/ e Vercel usa frontend/ como raiz.",
   "scripts": {
-    "format": "prettier --write \"**/*.{js,jsx}\"",
-    "format:check": "prettier --check \"**/*.{js,jsx}\"",
+    "format": "prettier --write \"**/*.{js,jsx,mjs}\"",
+    "format:check": "prettier --check \"**/*.{js,jsx,mjs}\"",
     "lint": "oxlint --deny-warnings"
   },
   "devDependencies": {
