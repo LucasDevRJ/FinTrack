@@ -26,11 +26,7 @@ router.get(
   validate(listTransactionsQuerySchema, "query"),
   transactionsController.exportCsv
 );
-router.post(
-  "/import",
-  validate(importTransactionsSchema),
-  transactionsController.importCsv
-);
+router.post("/import", validate(importTransactionsSchema), transactionsController.importCsv);
 router.get("/:id", validate(idParamSchema, "params"), transactionsController.getOne);
 router.patch(
   "/:id",

@@ -28,7 +28,8 @@ function hashToken(token) {
 }
 
 function sanitizeUser(user) {
-  const { password, pendingEmail, pendingEmailTokenHash, pendingEmailExpiresAt, ...safeUser } = user;
+  const { password, pendingEmail, pendingEmailTokenHash, pendingEmailExpiresAt, ...safeUser } =
+    user;
   return safeUser;
 }
 
@@ -94,7 +95,7 @@ export async function loginUser({ email, password }) {
   if (!user.emailVerifiedAt) {
     throw new AppError(
       "Confirme seu e-mail antes de fazer login. Verifique sua caixa de entrada.",
-      403,
+      403
     );
   }
 
@@ -332,18 +333,102 @@ async function seedDemoData(userId) {
 
   await prisma.transaction.createMany({
     data: [
-      { userId, type: "EXPENSE", amount: 320, category: "Alimentação", description: "Supermercado", date: seedDate(0, 3) },
-      { userId, type: "EXPENSE", amount: 85, category: "Alimentação", description: "iFood", date: seedDate(0, 7) },
-      { userId, type: "EXPENSE", amount: 210, category: "Alimentação", description: "Restaurante", date: seedDate(0, 14) },
-      { userId, type: "EXPENSE", amount: 250, category: "Alimentação", description: "Supermercado", date: seedDate(1, 4) },
-      { userId, type: "EXPENSE", amount: 60, category: "Transporte", description: "Uber", date: seedDate(0, 6) },
-      { userId, type: "EXPENSE", amount: 180, category: "Transporte", description: "Combustível", date: seedDate(0, 12) },
-      { userId, type: "EXPENSE", amount: 90, category: "Transporte", description: "Uber", date: seedDate(1, 9) },
-      { userId, type: "EXPENSE", amount: 150, category: "Lazer", description: "Cinema e jantar", date: seedDate(0, 16) },
-      { userId, type: "EXPENSE", amount: 220, category: "Lazer", description: "Show", date: seedDate(1, 20) },
-      { userId, type: "EXPENSE", amount: 120, category: "Saúde", description: "Farmácia", date: seedDate(0, 9) },
-      { userId, type: "EXPENSE", amount: 200, category: "Saúde", description: "Consulta médica", date: seedDate(1, 15) },
-      { userId, type: "INCOME", amount: 800, category: "Freelance", description: "Projeto extra", date: seedDate(0, 18) },
+      {
+        userId,
+        type: "EXPENSE",
+        amount: 320,
+        category: "Alimentação",
+        description: "Supermercado",
+        date: seedDate(0, 3),
+      },
+      {
+        userId,
+        type: "EXPENSE",
+        amount: 85,
+        category: "Alimentação",
+        description: "iFood",
+        date: seedDate(0, 7),
+      },
+      {
+        userId,
+        type: "EXPENSE",
+        amount: 210,
+        category: "Alimentação",
+        description: "Restaurante",
+        date: seedDate(0, 14),
+      },
+      {
+        userId,
+        type: "EXPENSE",
+        amount: 250,
+        category: "Alimentação",
+        description: "Supermercado",
+        date: seedDate(1, 4),
+      },
+      {
+        userId,
+        type: "EXPENSE",
+        amount: 60,
+        category: "Transporte",
+        description: "Uber",
+        date: seedDate(0, 6),
+      },
+      {
+        userId,
+        type: "EXPENSE",
+        amount: 180,
+        category: "Transporte",
+        description: "Combustível",
+        date: seedDate(0, 12),
+      },
+      {
+        userId,
+        type: "EXPENSE",
+        amount: 90,
+        category: "Transporte",
+        description: "Uber",
+        date: seedDate(1, 9),
+      },
+      {
+        userId,
+        type: "EXPENSE",
+        amount: 150,
+        category: "Lazer",
+        description: "Cinema e jantar",
+        date: seedDate(0, 16),
+      },
+      {
+        userId,
+        type: "EXPENSE",
+        amount: 220,
+        category: "Lazer",
+        description: "Show",
+        date: seedDate(1, 20),
+      },
+      {
+        userId,
+        type: "EXPENSE",
+        amount: 120,
+        category: "Saúde",
+        description: "Farmácia",
+        date: seedDate(0, 9),
+      },
+      {
+        userId,
+        type: "EXPENSE",
+        amount: 200,
+        category: "Saúde",
+        description: "Consulta médica",
+        date: seedDate(1, 15),
+      },
+      {
+        userId,
+        type: "INCOME",
+        amount: 800,
+        category: "Freelance",
+        description: "Projeto extra",
+        date: seedDate(0, 18),
+      },
     ],
   });
 

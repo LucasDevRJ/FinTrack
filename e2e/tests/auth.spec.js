@@ -46,7 +46,10 @@ test.describe("Autenticação", () => {
     await expect(page.getByRole("heading", { name: `Olá, ${user.name}` })).toBeVisible();
   });
 
-  test("login antes de confirmar o e-mail mostra um aviso específico", async ({ page, request }) => {
+  test("login antes de confirmar o e-mail mostra um aviso específico", async ({
+    page,
+    request,
+  }) => {
     const user = uniqueUser("unverified");
     await registerViaApi(request, user);
 
@@ -56,7 +59,9 @@ test.describe("Autenticação", () => {
     await page.getByRole("button", { name: "Entrar", exact: true }).click();
 
     await expect(page.getByText(/confirme seu e-mail/i)).toBeVisible();
-    await expect(page.getByRole("button", { name: "Reenviar e-mail de confirmação" })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Reenviar e-mail de confirmação" })
+    ).toBeVisible();
     await expect(page).toHaveURL("/login");
   });
 
@@ -76,7 +81,10 @@ test.describe("Autenticação", () => {
     await expect(page).toHaveURL("/dashboard");
   });
 
-  test("login com senha errada mostra uma mensagem de erro específica", async ({ page, request }) => {
+  test("login com senha errada mostra uma mensagem de erro específica", async ({
+    page,
+    request,
+  }) => {
     const user = uniqueUser("badlogin");
     const devVerificationToken = await registerViaApi(request, user);
     await request.post("http://localhost:3333/api/auth/verify-email", {

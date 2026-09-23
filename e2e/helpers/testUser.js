@@ -31,7 +31,7 @@ export async function registerUserViaApi(request, user = uniqueUser()) {
   });
   if (!registerResponse.ok()) {
     throw new Error(
-      `Falha ao registrar usuário de teste: ${registerResponse.status()} ${await registerResponse.text()}`,
+      `Falha ao registrar usuário de teste: ${registerResponse.status()} ${await registerResponse.text()}`
     );
   }
   const { devVerificationToken } = await registerResponse.json();
@@ -41,7 +41,7 @@ export async function registerUserViaApi(request, user = uniqueUser()) {
   });
   if (!verifyResponse.ok()) {
     throw new Error(
-      `Falha ao verificar e-mail do usuário de teste: ${verifyResponse.status()} ${await verifyResponse.text()}`,
+      `Falha ao verificar e-mail do usuário de teste: ${verifyResponse.status()} ${await verifyResponse.text()}`
     );
   }
   const { token } = await verifyResponse.json();

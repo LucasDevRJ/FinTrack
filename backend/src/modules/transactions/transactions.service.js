@@ -267,7 +267,9 @@ function monthKey(date) {
 function buildMonthlyBreakdown(transactions, rangeStart) {
   const buckets = new Map();
   for (let i = 0; i < MONTHS_IN_SUMMARY; i++) {
-    const bucketDate = new Date(Date.UTC(rangeStart.getUTCFullYear(), rangeStart.getUTCMonth() + i, 1));
+    const bucketDate = new Date(
+      Date.UTC(rangeStart.getUTCFullYear(), rangeStart.getUTCMonth() + i, 1)
+    );
     const key = monthKey(bucketDate);
     buckets.set(key, { month: key, income: 0, expense: 0 });
   }

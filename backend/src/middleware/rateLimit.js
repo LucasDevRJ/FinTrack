@@ -8,7 +8,9 @@ const LIMIT = 10;
 // itself (see its RateLimitInfo type), no extra bookkeeping needed here.
 function handler(req, res) {
   const resetTime = req.rateLimit?.resetTime;
-  const minutes = resetTime ? Math.max(1, Math.ceil((resetTime.getTime() - Date.now()) / 60_000)) : null;
+  const minutes = resetTime
+    ? Math.max(1, Math.ceil((resetTime.getTime() - Date.now()) / 60_000))
+    : null;
 
   res.status(429).json({
     message: minutes

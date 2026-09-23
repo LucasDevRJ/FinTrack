@@ -2,11 +2,7 @@ import { Router } from "express";
 import { protect } from "../../middleware/auth.js";
 import { validate } from "../../middleware/validate.js";
 import * as budgetsController from "./budgets.controller.js";
-import {
-  createBudgetGoalSchema,
-  idParamSchema,
-  updateBudgetGoalSchema,
-} from "./budgets.schema.js";
+import { createBudgetGoalSchema, idParamSchema, updateBudgetGoalSchema } from "./budgets.schema.js";
 
 const router = Router();
 

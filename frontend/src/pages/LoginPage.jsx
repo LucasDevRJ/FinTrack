@@ -68,7 +68,10 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               E-mail
             </label>
             <input
@@ -82,7 +85,10 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               Senha
             </label>
             <input
@@ -138,7 +144,10 @@ export default function LoginPage() {
         </button>
 
         <p className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
-          <Link to="/forgot-password" className="text-indigo-600 hover:underline dark:text-indigo-400">
+          <Link
+            to="/forgot-password"
+            className="text-indigo-600 hover:underline dark:text-indigo-400"
+          >
             Esqueceu a senha?
           </Link>
         </p>

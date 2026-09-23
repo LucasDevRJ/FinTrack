@@ -104,6 +104,11 @@ export async function listBudgetGoalsWithProgress(userId) {
     const monthlyLimit = Number(goal.monthlyLimit);
     const spent = spentByCategory.get(goal.category.toLowerCase()) ?? 0;
 
-    return { id: goal.id, category: goal.category, monthlyLimit, ...calculateGoalProgress(monthlyLimit, spent) };
+    return {
+      id: goal.id,
+      category: goal.category,
+      monthlyLimit,
+      ...calculateGoalProgress(monthlyLimit, spent),
+    };
   });
 }
