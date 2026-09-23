@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router";
+import { listPendingOccurrencesRequest } from "../api/recurring.js";
 import { getSummaryRequest } from "../api/transactions.js";
 import CategoryBreakdownChart from "../components/CategoryBreakdownChart.jsx";
 import Header from "../components/Header.jsx";
@@ -19,17 +21,39 @@ function SummaryCard({ label, value }) {
 export default function DashboardPage() {
   const [summary, setSummary] = useState(null);
   const [error, setError] = useState("");
+  const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
     getSummaryRequest()
       .then(setSummary)
       .catch(() => setError("Não foi possível carregar o resumo financeiro"));
+    // Best-effort reminder: pending bills generate no notification on their
+    // own (#32), but a failure here shouldn't block the dashboard itself.
+    listPendingOccurrencesRequest()
+      .then((pending) => setPendingCount(pending.length))
+      .catch(() => {});
   }, []);
 
   return (
     <main className="min-h-screen bg-gray-50 p-4 sm:p-8 dark:bg-gray-900">
       <div className="mx-auto max-w-4xl">
         <Header />
+
+        {pendingCount > 0 && (
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-300 bg-amber-50 p-4 dark:border-amber-700 dark:bg-amber-900/30">
+            <p className="text-sm text-amber-900 dark:text-amber-200">
+              {pendingCount === 1
+                ? "Você tem 1 conta de valor variável para confirmar."
+                : `Você tem ${pendingCount} contas de valor variável para confirmar.`}
+            </p>
+            <Link
+              to="/recurring"
+              className="text-sm font-medium text-amber-900 underline hover:no-underline dark:text-amber-200"
+            >
+              Confirmar valores
+            </Link>
+          </div>
+        )}
 
         {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 

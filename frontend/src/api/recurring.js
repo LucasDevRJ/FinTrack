@@ -18,3 +18,17 @@ export async function updateRecurringTransactionRequest(id, payload) {
 export async function deleteRecurringTransactionRequest(id) {
   await apiClient.delete(`/recurring/${id}`);
 }
+
+export async function listPendingOccurrencesRequest() {
+  const { data } = await apiClient.get("/recurring/pending");
+  return data;
+}
+
+export async function confirmOccurrenceRequest(id, payload) {
+  const { data } = await apiClient.post(`/recurring/${id}/confirm`, payload);
+  return data;
+}
+
+export async function skipOccurrenceRequest(id, payload) {
+  await apiClient.post(`/recurring/${id}/skip`, payload);
+}

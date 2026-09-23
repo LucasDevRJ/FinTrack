@@ -7,6 +7,7 @@ import prisma from "../../src/lib/prisma.js";
 // Deletes in child-to-parent order so FK constraints don't reject it —
 // simpler than a raw TRUNCATE ... CASCADE, and fine at this DB's size.
 export async function resetDb() {
+  await prisma.recurringOccurrence.deleteMany();
   await prisma.transaction.deleteMany();
   await prisma.recurringTransaction.deleteMany();
   await prisma.budgetGoal.deleteMany();
