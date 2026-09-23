@@ -140,15 +140,30 @@ for (const [file, lines] of added) {
           "datas-utc",
           "Getter/setter de data local no backend — use a versão UTC (`getUTCMonth()` etc.). Ver backend/CLAUDE.md."
         );
-      else if (file.startsWith("frontend/src/") && !/UTC/i.test(code))
+      // utils/date.js is the one place that reads local time on purpose ("today").
+      else if (
+        file.startsWith("frontend/src/") &&
+        file !== "frontend/src/utils/date.js" &&
+        !/UTC/i.test(code)
+      )
         report(
           "aviso",
           file,
           line,
           "datas-utc",
-          'Data lida em horário local no frontend — datas do backend são meia-noite UTC; confirme que não desloca um dia (ex.: `timeZone: "UTC"`).'
+          "Data lida em horário local no frontend — datas do backend são meia-noite UTC; use os helpers de `src/utils/date.js` (frontend/CLAUDE.md: Datas)."
         );
     }
+
+    // "Today" via toISOString() is the UTC day — tomorrow after 21h in Brasília (#82).
+    if (file.startsWith("frontend/src/") && /toISOString\(\)\.(slice|substring|split)\(/.test(code))
+      report(
+        "erro",
+        file,
+        line,
+        "datas-utc",
+        "`toISOString()` como data de calendário é o dia em UTC (depois das 21h em Brasília já é amanhã) — use `todayInputValue()`/`toDateInputValue()` de `src/utils/date.js`."
+      );
 
     if (
       /\bconsole\.(log|error|warn|info|debug)\(/.test(code) &&

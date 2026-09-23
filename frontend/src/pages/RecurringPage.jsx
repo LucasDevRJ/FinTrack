@@ -10,16 +10,13 @@ import RecurringTransactionForm from "../components/RecurringTransactionForm.jsx
 import { useTheme } from "../context/ThemeContext.jsx";
 import { formatCurrency } from "../utils/currency.js";
 import { getErrorMessage } from "../utils/apiError.js";
+import { formatDate } from "../utils/date.js";
 import {
   EXPENSE_COLOR,
   EXPENSE_COLOR_DARK,
   INCOME_COLOR,
   INCOME_COLOR_DARK,
 } from "../utils/transactionColors.js";
-
-function formatDate(isoDate) {
-  return new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" }).format(new Date(isoDate));
-}
 
 export default function RecurringPage() {
   const { theme } = useTheme();
