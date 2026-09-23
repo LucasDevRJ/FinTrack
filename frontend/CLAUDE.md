@@ -9,7 +9,7 @@ React 19 + Vite, Tailwind v4 (utilitárias direto no JSX, sem CSS por componente
 - `src/components/*.jsx` — peças reaproveitáveis sem chamada à API (formulários, gráficos, `Header`, `ProtectedRoute`); recebem dados e callbacks por props.
 - `src/context/AuthContext.jsx` — guarda `user`/`isLoading` e todas as ações de autenticação (login, registro + fluxo de verificação de e-mail, troca de senha, exclusão de conta, login como demo). Ao montar, se um token sobreviveu a um refresh, ele é validado via `meRequest()` antes de renderizar conteúdo protegido.
 - `src/context/ThemeContext.jsx` — modo escuro, preferência persistida + detecção do sistema.
-- `src/utils/` — funções puras compartilhadas: `getErrorMessage` (`apiError.js`), `formatCurrency` (`currency.js`, BRL em pt-BR), `isDemoUser` (`demo.js`), cores fixas de gráfico (`transactionColors.js`, `budgetStatus.js`).
+- `src/utils/` — funções puras compartilhadas: `getErrorMessage` (`apiError.js`), `formatCurrency` (`currency.js`, BRL em pt-BR), `formatDate`/`toDateInputValue`/`todayInputValue` (`date.js`, ver "Datas"), `isDemoUser` (`demo.js`), cores fixas de gráfico (`transactionColors.js`, `budgetStatus.js`).
 
 ## Rotas
 
@@ -45,8 +45,10 @@ Referência: `BudgetGoalForm.jsx`. O componente de formulário é controlado (`u
 ## Datas
 
 O backend guarda datas de transação como meia-noite UTC de uma data de calendário (ver `backend/CLAUDE.md`).
-- **Exibir** uma data vinda da API: `Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" })`. Sem o `timeZone: "UTC"`, o navegador em UTC-3 mostra o dia anterior.
-- **Preencher `<input type="date">`** com uma data da API: `iso.slice(0, 10)`. Com "hoje": usar a data **local** do usuário, nunca `new Date().toISOString()` (é UTC — depois das 21h em Brasília já é amanhã; bug aberto na #82, que também unifica esses helpers hoje duplicados em `TransactionForm`/`RecurringTransactionForm` e `TransactionsPage`/`RecurringPage`).
+Use sempre os helpers de `src/utils/date.js`, que aplicam o relógio certo em cada caso:
+- **Exibir** uma data vinda da API: `formatDate(iso)` — lê em UTC; sem isso, o navegador em UTC-3 mostra o dia anterior.
+- **Preencher `<input type="date">`**: `toDateInputValue(iso)` — data da API, ou "hoje" quando vazio.
+- **"Hoje"** (valor padrão, nome de arquivo): `todayInputValue()` — data **local** do usuário. Nunca `new Date().toISOString()`: é UTC, e depois das 21h em Brasília já é amanhã (#82). Teste E2E que depende de "hoje" fixa o relógio e o fuso (`page.clock.setFixedTime` + `test.use({ timezoneId: "America/Sao_Paulo" })`), como em `transactions.spec.js`.
 
 ## Autenticação
 
