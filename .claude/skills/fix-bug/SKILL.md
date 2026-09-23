@@ -61,7 +61,14 @@ Siga a skill `start-issue` (label `bug`, branch `fix/<n>-<slug>`; se a issue já
 | Cálculo puro (datas, progresso, CSV) | `backend/tests/unit/` |
 | UI/fluxo no navegador | `e2e/tests/` (skill `e2e-spec`). O frontend não tem teste unitário; não crie a infraestrutura dentro de um bugfix, sugira outra issue |
 
-O nome do teste descreve o comportamento correto, não o bug. Rode o teste e **confirme que ele falha pelo motivo certo**: a mensagem de falha tem que ser o sintoma do bug, não um erro de setup. Faça o commit:
+Teste de integração ou E2E depende do Postgres de teste. Antes de rodar, na raiz:
+
+```bash
+docker compose ps                              # parado ou sem Docker → docker compose up -d
+cd backend && npm run test:db:setup            # aplica migrations pendentes; sem pendência, não faz nada
+```
+
+O nome do teste descreve o comportamento correto, não o bug. Rode o teste e **confirme que ele falha pelo motivo certo**: a mensagem de falha tem que ser o sintoma do bug, não um erro de setup. Exemplo real (#71): com o Docker desligado, os 3 testes de regressão falharam no `resetDb` por não conectar ao banco. Parecia a prova do bug, mas era setup; só com o banco no ar o diff mostrou o sintoma (`- "Campo obrigatório"` / `+ "Required"`). Faça o commit:
 
 ```
 test: reproduz <sintoma> (#<n>)
