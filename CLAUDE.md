@@ -47,7 +47,7 @@ Só o que Prettier/oxlint não verificam. Regras de arquitetura (ownership 404, 
 | Camada | Idioma |
 |---|---|
 | Identificadores, comentários, nomes de teste unit/integração | Inglês (lidos junto com o código e as APIs das libs) |
-| Tudo que o usuário vê: UI, `AppError`, mensagens de validação Zod | Português — inclusive campo obrigatório/tipo inválido: não deixar vazar a mensagem padrão do Zod em inglês (#71) |
+| Tudo que o usuário vê: UI, `AppError`, mensagens de validação Zod | Português — campo obrigatório/tipo inválido/limites sem mensagem própria já saem em PT pelo error map global (`backend/src/utils/zodErrorMap.js`, #71) |
 | Nomes de teste E2E (`test("excluir uma meta pede confirmação...")`) | Português — descrevem comportamento do produto, na língua do produto |
 | Docs `.md`, issues, commits, PRs | Português |
 

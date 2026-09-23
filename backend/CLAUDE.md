@@ -13,10 +13,13 @@ Peças transversais vivem fora de `modules/`:
 - `src/middleware/auth.js` — `protect` lê `Authorization: Bearer <token>`, verifica, define `req.userId`
 - `src/middleware/validate.js` — parseia `req.body`/`req.query`/`req.params` via Zod e substitui pelo valor validado/tipado; falhas de validação viram `ZodError`s encaminhados pro `next()`
 - `src/middleware/errorHandler.js` — tratador de erro central: `ZodError` → 400 com mensagem por campo, `AppError` → seu próprio status code, qualquer outro → logado + 500
+- `src/utils/zodErrorMap.js` — traduz as mensagens padrão do Zod (campo obrigatório, tipo errado, `min`/`max`, data inválida) para português; registrado globalmente com `z.setErrorMap()` no `app.js`
 - `src/utils/AppError.js` — `new AppError(message, statusCode)` para erros esperados/tratados (ex.: 404 "não encontrado", 401 "token inválido")
 - `src/lib/prisma.js`, `src/lib/resend.js` — singletons de cliente compartilhados
 
 **Padrão de ownership**: toda busca de recurso é escopada por `userId` na cláusula `where` do Prisma (ex.: `findFirst({ where: { id, userId } })`), e um miss é sempre 404, nunca 403 — isso evita vazar se um recurso existe para outro usuário. Ver `findOwnedTransaction` / `findOwnedRecurringTransaction` nos respectivos services.
+
+**Mensagens de validação**: schema sem mensagem própria já responde em português pelo error map global, então só escreva mensagem quando ela precisar ser mais específica que a genérica (ex.: "E-mail inválido", "Senha deve ter pelo menos 8 caracteres"). Nunca passe `errorMap` na chamada (`schema.parse(data, { errorMap })`): no Zod 3 o map por chamada tem prioridade sobre `required_error`/`invalid_type_error`/`errorMap` do próprio schema e apagaria essas mensagens; o global fica abaixo delas. Ver `tests/unit/zodErrorMap.test.js`.
 
 **Ordem das rotas**: sub-rotas estáticas (`/summary`, `/export`, `/import`) precisam ser registradas antes de `/:id` no router, senão o Express as trata como o parâmetro `:id` e o schema de UUID as rejeita.
 
