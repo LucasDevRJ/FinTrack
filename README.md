@@ -16,7 +16,7 @@ Clique em **"Entrar como visitante"** na tela de login para explorar o app com d
 - **Transações**: CRUD completo de receitas/despesas, busca por texto, filtros por período/categoria, paginação
 - **Dashboard**: saldo atual, resumo do mês, gráfico de receitas x despesas (6 meses) e despesas por categoria
 - **Metas de orçamento**: limite mensal recorrente por categoria, com barra de progresso (verde/amarelo/vermelho)
-- **Transações recorrentes**: templates (salário, aluguel, etc.) que geram lançamentos automaticamente
+- **Transações recorrentes**: templates (salário, aluguel, etc.) que geram lançamentos automaticamente; contas de **valor variável** (água, luz, gás) ficam pendentes até você confirmar o valor real, com uma estimativa pela média dos últimos meses
 - **Exportação CSV** das transações, respeitando os filtros aplicados
 - **Modo escuro**, com preferência salva e detecção automática do tema do sistema
 - **Layout responsivo** (mobile/tablet/desktop)
