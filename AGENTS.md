@@ -21,6 +21,7 @@ Este arquivo orienta qualquer agente de IA (Claude Code, Codex, Cursor etc.) faz
   - `start-issue` — Issue com label + branch `<tipo>/<n>-<slug>` (início de todo trabalho)
   - `backend-module` — módulo/endpoint novo no backend, ponta a ponta até o wrapper do frontend
   - `e2e-spec` — spec Playwright novo seguindo os helpers e a estratégia de dados do `e2e/`
+  - `fix-bug` — erro/bug: coleta → reprodução → causa raiz → teste de regressão falhando → correção provada → PR (merge com confirmação)
   - `review-fintrack` — revisão da branch contra os padrões do repo: script mecânico (`check.mjs`) + checklist de julgamento; roda antes do PR
   - `ship-pr` — push → PR `Closes #N` → CI verde → squash merge (com confirmação) + delete da branch
 
