@@ -38,6 +38,36 @@ Commits só de formatação vão para `.git-blame-ignore-revs` (hash do squash, 
 
 CI (GitHub Actions, `.github/workflows/`) roda formatação + lint (`Code quality`), os testes de backend e o E2E em todo PR/push para `main`.
 
+## Convenções de código
+
+Só o que Prettier/oxlint não verificam. Regras de arquitetura (ownership 404, datas UTC, ordem de rotas etc.) estão em `backend/CLAUDE.md` / `frontend/CLAUDE.md`.
+
+**Idioma por camada** — escolhido pelo público de cada uma; nunca misturar dentro da mesma camada:
+
+| Camada | Idioma |
+|---|---|
+| Identificadores, comentários, nomes de teste unit/integração | Inglês (lidos junto com o código e as APIs das libs) |
+| Tudo que o usuário vê: UI, `AppError`, mensagens de validação Zod | Português — inclusive campo obrigatório/tipo inválido: não deixar vazar a mensagem padrão do Zod em inglês (#71) |
+| Nomes de teste E2E (`test("excluir uma meta pede confirmação...")`) | Português — descrevem comportamento do produto, na língua do produto |
+| Docs `.md`, issues, commits, PRs | Português |
+
+**Comentários explicam o porquê, não o quê.** Escrever quando a razão não é óbvia pelo código: restrição externa (aridade do Express, limite do `express.json`), bug que o código evita (fuso UTC-3), trade-off escolhido. Citar o arquivo/função que segue o mesmo padrão ("same ownership-scoping pattern as `findOwnedTransaction`") em vez de reexplicar. Sem comentário narrando a linha seguinte, sem código comentado, sem `TODO` solto — pendência vira GitHub Issue.
+
+**Nomes**
+- Backend: `<modulo>.<camada>.js` (`budgets.service.js`); busca com ownership = `findOwned<Recurso>`; conversão para resposta = `serialize<Recurso>`.
+- Frontend: wrappers de API `<verbo><Recurso>Request` (`createBudgetGoalRequest`); componentes/páginas em PascalCase `.jsx`.
+- Parâmetro obrigatório pela assinatura mas não usado: prefixo `_` (`_next`).
+
+**Módulos (ESM)**
+- Imports relativos sempre com extensão `.js` no backend (Node ESM exige).
+- `export default` só para: routers Express, singletons de `lib/`, `app.js`, e componentes/páginas React. Services, controllers, schemas, utils e contexts usam named exports (`import * as budgetsService`).
+
+**Erros e logs**
+- Erro esperado → `throw new AppError(mensagemEmPT, status)`; nunca `res.status(...)` direto de dentro do service. Erro inesperado sobe para o `errorHandler` (vira 500 genérico — detalhes internos nunca vão para a resposta).
+- `console.*` só no `errorHandler` e no boot do `server.js`.
+
+**Funções puras separadas do I/O** quando há cálculo (ex.: `calculateGoalProgress`, exportada para teste unitário sem banco).
+
 ## Arquitetura do backend
 
 Ver `backend/CLAUDE.md`.
