@@ -27,10 +27,18 @@ function hashToken(token) {
   return crypto.createHash("sha256").update(token).digest("hex");
 }
 
-function sanitizeUser(user) {
-  const { password, pendingEmail, pendingEmailTokenHash, pendingEmailExpiresAt, ...safeUser } =
-    user;
-  return safeUser;
+// Allowlist, not `const { password, ...rest }`: the User model keeps gaining
+// internal columns (token hashes, pending e-mail change), and with a denylist
+// each new one leaks into every auth response until someone notices (#90).
+function serializeUser(user) {
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    emailVerifiedAt: user.emailVerifiedAt,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+  };
 }
 
 // Reused by every account-mutating action below (edit name/email/password) —
@@ -67,7 +75,7 @@ export async function registerUser({ name, email, password }) {
   // No token here anymore — login is blocked until the e-mail above is
   // confirmed (see loginUser), so issuing one at registration would let the
   // frontend skip straight past that check.
-  const result = { user: sanitizeUser(user), message: "Verifique seu e-mail para ativar a conta" };
+  const result = { user: serializeUser(user), message: "Verifique seu e-mail para ativar a conta" };
 
   // Non-production convenience: nothing here can click a real e-mail link
   // (local dev, and the automated test suites — see tests/setup/auth.js and
@@ -99,7 +107,7 @@ export async function loginUser({ email, password }) {
     );
   }
 
-  return { user: sanitizeUser(user), token: signToken(user.id) };
+  return { user: serializeUser(user), token: signToken(user.id) };
 }
 
 export async function verifyEmail(token) {
@@ -122,7 +130,7 @@ export async function verifyEmail(token) {
 
   // Verifying is also the moment the account becomes usable — issue a token
   // right away instead of sending the user back to fill in the login form.
-  return { user: sanitizeUser(verifiedUser), token: signToken(verifiedUser.id) };
+  return { user: serializeUser(verifiedUser), token: signToken(verifiedUser.id) };
 }
 
 export async function resendVerificationEmail(email) {
@@ -148,7 +156,7 @@ export async function resendVerificationEmail(email) {
 export async function getUserById(id) {
   const user = await prisma.user.findUnique({ where: { id } });
   if (!user) throw new AppError("Usuário não encontrado", 404);
-  return sanitizeUser(user);
+  return serializeUser(user);
 }
 
 export async function deleteUserAccount(id, password) {
@@ -179,7 +187,7 @@ export async function updateUserName(id, name) {
   assertNotDemoAccount(user);
 
   const updated = await prisma.user.update({ where: { id }, data: { name } });
-  return sanitizeUser(updated);
+  return serializeUser(updated);
 }
 
 // Doesn't touch `email` yet — only stages the change and sends the
@@ -253,7 +261,7 @@ export async function confirmEmailChange(token) {
 
   // Same reasoning as verifyEmail: confirming is also the moment it's safe
   // to consider the user "here", so hand back a usable token right away.
-  return { user: sanitizeUser(updated), token: signToken(updated.id) };
+  return { user: serializeUser(updated), token: signToken(updated.id) };
 }
 
 // Confirms via the CURRENT password rather than an e-mail code — the user is
@@ -472,7 +480,7 @@ export async function loginAsDemo() {
     lastDemoSeedAt = Date.now();
   }
 
-  return { user: sanitizeUser(user), token: signToken(user.id) };
+  return { user: serializeUser(user), token: signToken(user.id) };
 }
 
 export async function requestPasswordReset(email) {
