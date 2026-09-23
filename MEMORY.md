@@ -76,4 +76,12 @@ Resumo das decisões de produto já discutidas e acordadas para itens que ainda 
 
 ## Lição aprendida: fechamento de issues
 
-A issue [#41](https://github.com/LucasDevRJ/FinTrack/issues/41) (verificação de e-mail no cadastro) ficou com o código mergeado em `main` mas a issue **aberta** no GitHub por um bom tempo — o PR aparentemente não referenciou `Closes #41` no corpo, então o merge não fechou ela automaticamente. Fechada manualmente em 2026-09-19. **Vale conferir, ao abrir um PR, que a issue certa está referenciada** (`Closes #N`) para o fechamento automático funcionar — não custa nada checar rapidamente depois do merge se a issue realmente fechou.
+A issue [#41](https://github.com/LucasDevRJ/FinTrack/issues/41) (verificação de e-mail no cadastro) ficou com o código mergeado em `main` mas a issue **aberta** no GitHub por um bom tempo — o PR aparentemente não referenciou `Closes #41` no corpo, então o merge não fechou ela automaticamente. Fechada manualmente em 2026-09-19. **Vale conferir, ao abrir um PR, que a issue certa está referenciada** (`Closes #N`) para o fechamento automático funcionar — não custa nada checar rapidamente depois do merge se a issue realmente fechou. Desde a #64 essa checagem faz parte da skill `ship-pr`.
+
+## Decisão: Skills de projeto do Claude Code (2026-09-22, #64)
+
+Os procedimentos recorrentes viraram Skills em `.claude/skills/` (`start-issue`, `backend-module`, `e2e-spec`, `ship-pr`). Critérios decididos:
+- **Só vira skill o que se repete, tem vários passos e dá para errar sem roteiro.** Não converter seções do `AGENTS.md` em skill uma a uma — isso só duplicaria conteúdo.
+- **Skills referenciam, não copiam**: apontam para `CLAUDE.md`/`AGENTS.md` e para código de referência (ex.: módulo `budgets`) em vez de trazer templates de código que desatualizam.
+- **De projeto, não de usuário**: ficam versionadas no repo para valer em qualquer máquina. O `pr-creator` continua como skill pessoal do Lucas (`~/.claude/skills`); a `ship-pr` usa o formato dele quando disponível e tem um mínimo próprio como alternativa.
+- **O merge sempre pede confirmação explícita**, mesmo dentro da skill, porque push em `main` = deploy em produção.
