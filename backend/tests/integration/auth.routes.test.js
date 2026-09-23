@@ -31,9 +31,30 @@ describe("POST /api/auth/register", () => {
     expect(res.body.devVerificationToken).toEqual(expect.any(String));
     expect(res.body.user).toMatchObject({ email: user.email, name: user.name });
   });
+
+  it("reports a max-length violation in Portuguese when the schema has no custom message", async () => {
+    const res = await request(app)
+      .post("/api/auth/register")
+      .send(newUser({ name: "x".repeat(101) }));
+
+    expect(res.status).toBe(400);
+    expect(res.body.errors).toEqual([
+      { field: "name", message: "Deve ter no máximo 100 caracteres" },
+    ]);
+  });
 });
 
 describe("POST /api/auth/login", () => {
+  it("reports a missing field in Portuguese, not with Zod's default English message", async () => {
+    const res = await request(app).post("/api/auth/login").send({ email: "nao-e-email" });
+
+    expect(res.status).toBe(400);
+    expect(res.body.errors).toEqual([
+      { field: "email", message: "E-mail inválido" },
+      { field: "password", message: "Campo obrigatório" },
+    ]);
+  });
+
   it("rejects login with 403 before the e-mail is verified", async () => {
     const user = newUser();
     await request(app).post("/api/auth/register").send(user);

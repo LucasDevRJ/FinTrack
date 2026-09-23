@@ -84,4 +84,4 @@ Uma linha por área do checklist sem achados (ex.: "Ownership: 3 queries novas, 
 
 Ao mudar `check.mjs`, rode de novo os dois testes que o validaram:
 1. **Controle negativo:** crie um módulo falso com violações plantadas, confirme que cada regra dispara e que o exit é 1, e apague o módulo.
-2. **Falso positivo:** `node .claude/skills/review-fintrack/check.mjs $(git rev-list --max-parents=0 HEAD)` trata o código atual inteiro como novo. O resultado deve ser 0 erros. Os avisos restantes são dívidas conhecidas (ex.: #71).
+2. **Falso positivo:** `node .claude/skills/review-fintrack/check.mjs $(git rev-list --max-parents=0 HEAD)` trata o código atual inteiro como novo. O resultado deve ser 0 erros. Os avisos restantes são dívidas conhecidas.

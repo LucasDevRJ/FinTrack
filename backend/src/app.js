@@ -2,11 +2,17 @@ import cors from "cors";
 import express from "express";
 import helmet from "helmet";
 import morgan from "morgan";
+import { z } from "zod";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 import authRoutes from "./modules/auth/auth.routes.js";
 import budgetsRoutes from "./modules/budgets/budgets.routes.js";
 import recurringRoutes from "./modules/recurring/recurring.routes.js";
 import transactionsRoutes from "./modules/transactions/transactions.routes.js";
+import { zodErrorMap } from "./utils/zodErrorMap.js";
+
+// Global so it also covers schemas parsed outside the validate middleware
+// (e.g. the per-row safeParse in importTransactions) and any schema added later.
+z.setErrorMap(zodErrorMap);
 
 const app = express();
 

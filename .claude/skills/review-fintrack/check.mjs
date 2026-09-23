@@ -69,7 +69,6 @@ for (const [file, lines] of added) {
   const all = fileLines(file);
   const isService = /backend\/src\/modules\/.+\.service\.js$/.test(file);
   const isController = /\.controller\.js$/.test(file);
-  const isSchema = /\.schema\.js$/.test(file);
   const inBackendSrc = file.startsWith("backend/src/");
 
   for (const { line, text } of lines) {
@@ -199,21 +198,6 @@ for (const [file, lines] of added) {
         line,
         "idioma",
         "Comentário parece estar em português — comentários de código são em inglês (CLAUDE.md: idioma por camada)."
-      );
-
-    // User-facing messages are PT: a Zod validator with no custom message falls
-    // back to Zod's English default (#71).
-    if (
-      isSchema &&
-      /\bz\.(string|number|boolean|date|enum|nativeEnum|coerce\.\w+)\(\)/.test(code) &&
-      !/["'`][^"'`]*[A-Za-zÀ-ú]{3,}[^"'`]*["'`]/.test(code)
-    )
-      report(
-        "aviso",
-        file,
-        line,
-        "idioma",
-        "Campo Zod sem mensagem própria — o padrão do Zod é em inglês e chega ao usuário (#71)."
       );
   }
 }
