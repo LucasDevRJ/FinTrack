@@ -8,7 +8,7 @@ export function notFoundHandler(req, res) {
 // Express recognizes this as an error handler specifically because it takes
 // 4 arguments (err, req, res, next) — that arity is how it decides to route
 // errors here instead of treating it as a normal middleware.
-export function errorHandler(err, req, res, next) {
+export function errorHandler(err, req, res, _next) {
   if (err instanceof ZodError) {
     return res.status(400).json({
       message: "Dados inválidos",
