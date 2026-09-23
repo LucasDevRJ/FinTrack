@@ -87,4 +87,18 @@ test.describe("Transações", () => {
       page.getByText("Nenhuma transação encontrada para os filtros selecionados.")
     ).toBeVisible();
   });
+
+  test.describe("no horário de Brasília", () => {
+    test.use({ timezoneId: "America/Sao_Paulo" });
+
+    // 22:30 in Brasília is already the next day in UTC — the window where a
+    // UTC-based "today" pre-fills tomorrow's date (#82).
+    test("nova transação à noite vem com a data de hoje, não a de amanhã", async ({ page }) => {
+      await page.clock.setFixedTime(new Date("2026-09-23T22:30:00-03:00"));
+
+      await page.getByRole("button", { name: "Nova transação" }).click();
+
+      await expect(page.getByLabel("Data")).toHaveValue("2026-09-23");
+    });
+  });
 });
