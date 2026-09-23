@@ -1,6 +1,6 @@
 ---
 name: start-issue
-description: Inicia qualquer trabalho de código no FinTrack criando a GitHub Issue (com o label certo) e a branch `<tipo>/<número>-<slug>` a partir da `main` atualizada. Use SEMPRE antes de editar arquivos para uma tarefa nova — feature, bug, teste, refactor, doc, chore — mesmo que seja uma mudança de uma linha, e mesmo que o usuário só diga "implementa X", "corrige Y", "vamos fazer a issue #N", "começa a tarefa", "cria uma issue". Também use quando o usuário pedir para retomar uma issue já existente (só cria a branch).
+description: 'Inicia qualquer trabalho de código no FinTrack criando a GitHub Issue (com o label certo) e a branch `<tipo>/<número>-<slug>` a partir da `main` atualizada. Use SEMPRE antes de editar arquivos para uma tarefa nova — feature, bug, teste, refactor, doc, chore — mesmo que seja uma mudança de uma linha, e mesmo que o usuário só diga "implementa X", "corrige Y", "vamos fazer a issue #N", "começa a tarefa", "cria uma issue". Também use quando o usuário pedir para retomar uma issue já existente (só cria a branch).'
 ---
 
 # start-issue

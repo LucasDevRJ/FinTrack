@@ -1,6 +1,6 @@
 ---
 name: e2e-spec
-description: Escreve ou estende testes E2E Playwright do FinTrack (pasta e2e/) seguindo a estratégia de dados e os helpers do repo — usuário único por teste, login via API, locators acessíveis, nomes em português. Use quando a tarefa pedir teste ponta a ponta, "teste E2E", "spec do Playwright", "cobrir essa tela/fluxo com teste", ou quando uma feature nova de UI precisar de cobertura E2E antes do PR.
+description: 'Escreve ou estende testes E2E Playwright do FinTrack (pasta e2e/) seguindo a estratégia de dados e os helpers do repo — usuário único por teste, login via API, locators acessíveis, nomes em português. Use quando a tarefa pedir teste ponta a ponta, "teste E2E", "spec do Playwright", "cobrir essa tela/fluxo com teste", ou quando uma feature nova de UI precisar de cobertura E2E antes do PR.'
 ---
 
 # e2e-spec

@@ -1,6 +1,6 @@
 ---
 name: ship-pr
-description: Fecha o ciclo de uma issue do FinTrack — valida localmente, faz push da branch, abre o PR com "Closes #N", acompanha os checks de CI (backend tests + E2E) e, com confirmação do usuário, faz squash merge, apaga a branch e volta para a main. Use quando o trabalho da branch estiver pronto ou o usuário disser "pode subir", "abre o PR", "finaliza a issue", "manda pra produção", "faz o merge", "ship it". Para o corpo do PR, combina com a skill pr-creator quando ela estiver disponível.
+description: 'Fecha o ciclo de uma issue do FinTrack — valida localmente, faz push da branch, abre o PR com "Closes #N", acompanha os checks de CI (backend tests + E2E) e, com confirmação do usuário, faz squash merge, apaga a branch e volta para a main. Use quando o trabalho da branch estiver pronto ou o usuário disser "pode subir", "abre o PR", "finaliza a issue", "manda pra produção", "faz o merge", "ship it". Para o corpo do PR, combina com a skill pr-creator quando ela estiver disponível.'
 ---
 
 # ship-pr

@@ -1,6 +1,6 @@
 ---
 name: backend-module
-description: Roteiro para criar um módulo/recurso novo na API do FinTrack (backend Express + Prisma + Zod) ponta a ponta — model/migration, routes/controller/service/schema, registro no app.js, testes de integração e wrapper em frontend/src/api. Use sempre que a tarefa envolver um endpoint ou recurso novo no backend ("cria a API de X", "novo módulo", "endpoint para tags/metas/contas", "CRUD de ..."), ou adicionar um model novo ao schema.prisma, mesmo que o usuário não fale em "módulo".
+description: 'Roteiro para criar um módulo/recurso novo na API do FinTrack (backend Express + Prisma + Zod) ponta a ponta — model/migration, routes/controller/service/schema, registro no app.js, testes de integração e wrapper em frontend/src/api. Use sempre que a tarefa envolver um endpoint ou recurso novo no backend ("cria a API de X", "novo módulo", "endpoint para tags/metas/contas", "CRUD de ..."), ou adicionar um model novo ao schema.prisma, mesmo que o usuário não fale em "módulo".'
 ---
 
 # backend-module
