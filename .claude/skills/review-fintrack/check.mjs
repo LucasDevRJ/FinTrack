@@ -126,6 +126,16 @@ for (const [file, lines] of added) {
         "Prisma no controller — acesso a dados fica no service."
       );
 
+    // Stripping secrets with a rest spread is a denylist: every new column leaks (#90).
+    if (inBackendSrc && /\{[^}]*\b(password|\w*Hash)\b[^}]*\.\.\.\w+\s*\}\s*=/.test(code))
+      report(
+        "erro",
+        file,
+        line,
+        "serializacao",
+        "Removendo campo sensível com `...rest` (lista de exclusão) — use um `serialize<Recurso>` com lista de inclusão, como `serializeUser` (backend/CLAUDE.md: Serialização)."
+      );
+
     // Dates: stored as UTC midnight; local getters shift the day in UTC-3.
     if (
       /\.(getMonth|getFullYear|getDate|getDay|setMonth|setFullYear|setDate)\(|toLocaleDateString\(/.test(
