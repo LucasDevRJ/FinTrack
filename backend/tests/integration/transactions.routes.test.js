@@ -43,6 +43,18 @@ describe("POST /api/transactions", () => {
     expect(stored.userId).toBe(user.id);
   });
 
+  it("accepts an amount like 77.90 whose float times 100 isn't an exact integer", async () => {
+    const { token } = await createAuthenticatedUser();
+
+    const res = await request(app)
+      .post("/api/transactions")
+      .set(authHeader(token))
+      .send(transactionPayload({ amount: 77.9 }));
+
+    expect(res.status).toBe(201);
+    expect(res.body.amount).toBe(77.9);
+  });
+
   it("rejects an invalid payload with a field-specific validation message", async () => {
     const { token } = await createAuthenticatedUser();
 
