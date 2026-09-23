@@ -7,19 +7,23 @@ import { getErrorMessage } from "../utils/apiError.js";
 const FEATURES = [
   {
     title: "Transações completas",
-    description: "Registre receitas e despesas, busque por texto e filtre por período ou categoria.",
+    description:
+      "Registre receitas e despesas, busque por texto e filtre por período ou categoria.",
   },
   {
     title: "Metas de orçamento",
-    description: "Defina um limite mensal por categoria e acompanhe o progresso com uma barra verde/amarelo/vermelho.",
+    description:
+      "Defina um limite mensal por categoria e acompanhe o progresso com uma barra verde/amarelo/vermelho.",
   },
   {
     title: "Transações recorrentes",
-    description: "Cadastre salário, aluguel e outras contas fixas uma vez — os lançamentos são gerados automaticamente.",
+    description:
+      "Cadastre salário, aluguel e outras contas fixas uma vez — os lançamentos são gerados automaticamente.",
   },
   {
     title: "Gráficos e exportação",
-    description: "Visualize receitas x despesas e gastos por categoria, e exporte tudo em CSV quando precisar.",
+    description:
+      "Visualize receitas x despesas e gastos por categoria, e exporte tudo em CSV quando precisar.",
   },
   {
     title: "Modo escuro",
@@ -70,8 +74,8 @@ export default function LandingPage() {
           Organize suas finanças pessoais em um só lugar
         </h1>
         <p className="mx-auto mt-4 max-w-xl text-lg text-gray-600 dark:text-gray-400">
-          Controle receitas e despesas, defina metas de orçamento por categoria e acompanhe tudo com gráficos claros
-          — sem planilha.
+          Controle receitas e despesas, defina metas de orçamento por categoria e acompanhe tudo com
+          gráficos claros — sem planilha.
         </p>
 
         {error && <p className="mt-4 text-sm text-red-600 dark:text-red-400">{error}</p>}
@@ -132,9 +136,12 @@ export default function LandingPage() {
       </section>
 
       <section className="mx-auto max-w-3xl px-4 pb-20 text-center sm:px-8">
-        <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Pronto para começar?</h2>
+        <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+          Pronto para começar?
+        </h2>
         <p className="mt-2 text-gray-600 dark:text-gray-400">
-          Leva menos de um minuto para criar sua conta — ou explore com dados de exemplo, sem cadastro.
+          Leva menos de um minuto para criar sua conta — ou explore com dados de exemplo, sem
+          cadastro.
         </p>
         <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Link

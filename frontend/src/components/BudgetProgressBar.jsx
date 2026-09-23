@@ -1,6 +1,10 @@
 import { useTheme } from "../context/ThemeContext.jsx";
 import { formatCurrency } from "../utils/currency.js";
-import { BUDGET_TRACK_COLOR, BUDGET_TRACK_COLOR_DARK, getBudgetStatus } from "../utils/budgetStatus.js";
+import {
+  BUDGET_TRACK_COLOR,
+  BUDGET_TRACK_COLOR_DARK,
+  getBudgetStatus,
+} from "../utils/budgetStatus.js";
 
 // The fill is visually capped at 100% width so an over-budget goal doesn't
 // overflow the track — the actual percentage (which can exceed 100) is

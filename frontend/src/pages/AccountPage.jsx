@@ -105,7 +105,7 @@ function EmailField({ email, onRequestChange }) {
       await onRequestChange(value);
       setIsEditing(false);
       setSuccessMessage(
-        `Enviamos um link de confirmação para ${value}. Seu e-mail só muda depois que você clicar nele.`,
+        `Enviamos um link de confirmação para ${value}. Seu e-mail só muda depois que você clicar nele.`
       );
     } catch (err) {
       setError(getErrorMessage(err, "Não foi possível solicitar a troca de e-mail"));
@@ -310,9 +310,7 @@ export default function AccountPage() {
       <div className="mx-auto max-w-4xl">
         <Header />
 
-        <h2 className="mb-6 text-xl font-semibold text-gray-900 dark:text-gray-100">
-          Minha conta
-        </h2>
+        <h2 className="mb-6 text-xl font-semibold text-gray-900 dark:text-gray-100">Minha conta</h2>
 
         <div className="mb-6 space-y-4 rounded-lg bg-white p-5 shadow dark:bg-gray-800">
           <NameField name={user?.name} onSave={updateName} />

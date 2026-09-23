@@ -53,9 +53,9 @@ describe("parseCsv", () => {
 
 describe("detectDelimiter", () => {
   it("picks ';' for a file matching our own export format", () => {
-    expect(detectDelimiter("Data;Tipo;Categoria;Descrição;Valor\n2026-09-07;Despesa;X;;39,90\n")).toBe(
-      ";"
-    );
+    expect(
+      detectDelimiter("Data;Tipo;Categoria;Descrição;Valor\n2026-09-07;Despesa;X;;39,90\n")
+    ).toBe(";");
   });
 
   it("picks ',' for a CSV downloaded from a spreadsheet (Google Sheets/Excel)", () => {

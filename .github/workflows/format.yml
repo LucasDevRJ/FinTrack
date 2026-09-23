@@ -1,0 +1,29 @@
+name: Format
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      # Prettier fica no package.json da raiz (tooling do monorepo), com
+      # versão exata — ver .prettierrc.json para a config.
+      - name: Install tooling dependencies
+        run: npm ci
+
+      - name: Check formatting
+        run: npm run format:check

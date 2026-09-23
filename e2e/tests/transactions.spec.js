@@ -34,7 +34,10 @@ test.describe("Transações", () => {
 
     await expect(page.getByRole("row", { name: /Salário/ })).toBeVisible();
 
-    await page.getByRole("row", { name: /Salário/ }).getByRole("button", { name: "Editar" }).click();
+    await page
+      .getByRole("row", { name: /Salário/ })
+      .getByRole("button", { name: "Editar" })
+      .click();
     await page.getByLabel("Valor").fill("2500");
     await page.getByRole("button", { name: "Salvar" }).click();
 
@@ -80,6 +83,8 @@ test.describe("Transações", () => {
     await page.getByLabel("Buscar").fill("categoria-que-nao-existe");
     await page.getByRole("button", { name: "Filtrar" }).click();
 
-    await expect(page.getByText("Nenhuma transação encontrada para os filtros selecionados.")).toBeVisible();
+    await expect(
+      page.getByText("Nenhuma transação encontrada para os filtros selecionados.")
+    ).toBeVisible();
   });
 });

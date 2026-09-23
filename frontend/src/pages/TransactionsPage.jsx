@@ -116,7 +116,10 @@ export default function TransactionsPage() {
   }
 
   const hasActiveFilters = Boolean(
-    appliedFilters.startDate || appliedFilters.endDate || appliedFilters.category || appliedFilters.q
+    appliedFilters.startDate ||
+    appliedFilters.endDate ||
+    appliedFilters.category ||
+    appliedFilters.q
   );
 
   function openCreateForm() {
@@ -211,8 +214,12 @@ export default function TransactionsPage() {
             </div>
           )}
         </div>
-        {exportError && <p className="mb-4 text-sm text-red-600 dark:text-red-400">{exportError}</p>}
-        {importError && <p className="mb-4 text-sm text-red-600 dark:text-red-400">{importError}</p>}
+        {exportError && (
+          <p className="mb-4 text-sm text-red-600 dark:text-red-400">{exportError}</p>
+        )}
+        {importError && (
+          <p className="mb-4 text-sm text-red-600 dark:text-red-400">{importError}</p>
+        )}
         {importResult && (
           <div
             className={`mb-4 rounded-md p-3 text-sm ${

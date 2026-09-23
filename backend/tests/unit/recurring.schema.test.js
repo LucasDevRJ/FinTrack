@@ -49,12 +49,12 @@ describe("createRecurringTransactionSchema", () => {
   });
 
   it("rejects dayOfMonth outside 1-31", () => {
-    expect(createRecurringTransactionSchema.safeParse(validPayload({ dayOfMonth: 0 })).success).toBe(
-      false
-    );
-    expect(createRecurringTransactionSchema.safeParse(validPayload({ dayOfMonth: 32 })).success).toBe(
-      false
-    );
+    expect(
+      createRecurringTransactionSchema.safeParse(validPayload({ dayOfMonth: 0 })).success
+    ).toBe(false);
+    expect(
+      createRecurringTransactionSchema.safeParse(validPayload({ dayOfMonth: 32 })).success
+    ).toBe(false);
   });
 
   it("rejects an invalid type", () => {

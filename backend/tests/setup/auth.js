@@ -23,7 +23,7 @@ export async function createAuthenticatedUser(overrides = {}) {
   const registerRes = await request(app).post("/api/auth/register").send(payload);
   if (registerRes.status !== 201) {
     throw new Error(
-      `Falha ao criar usuário de teste: ${registerRes.status} ${JSON.stringify(registerRes.body)}`,
+      `Falha ao criar usuário de teste: ${registerRes.status} ${JSON.stringify(registerRes.body)}`
     );
   }
 
@@ -32,7 +32,7 @@ export async function createAuthenticatedUser(overrides = {}) {
     .send({ token: registerRes.body.devVerificationToken });
   if (verifyRes.status !== 200) {
     throw new Error(
-      `Falha ao verificar e-mail do usuário de teste: ${verifyRes.status} ${JSON.stringify(verifyRes.body)}`,
+      `Falha ao verificar e-mail do usuário de teste: ${verifyRes.status} ${JSON.stringify(verifyRes.body)}`
     );
   }
 

@@ -43,7 +43,10 @@ export default function ResetPasswordPage() {
         {!token ? (
           <p className="text-sm text-red-600 dark:text-red-400">
             Link inválido. Solicite um novo link em{" "}
-            <Link to="/forgot-password" className="text-indigo-600 hover:underline dark:text-indigo-400">
+            <Link
+              to="/forgot-password"
+              className="text-indigo-600 hover:underline dark:text-indigo-400"
+            >
               esqueci minha senha
             </Link>
             .
@@ -51,7 +54,10 @@ export default function ResetPasswordPage() {
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
                 Nova senha
               </label>
               <input
@@ -65,7 +71,10 @@ export default function ResetPasswordPage() {
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label
+                htmlFor="confirmPassword"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
                 Confirmar nova senha
               </label>
               <input

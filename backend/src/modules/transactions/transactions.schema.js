@@ -46,7 +46,12 @@ export const listTransactionsQuerySchema = z
     // these since a CSV export should always contain every matching row,
     // not just one page. Defaulted here so the controller/service never has
     // to special-case "page not provided".
-    page: z.coerce.number().int().min(1, "Página deve ser maior ou igual a 1").optional().default(1),
+    page: z.coerce
+      .number()
+      .int()
+      .min(1, "Página deve ser maior ou igual a 1")
+      .optional()
+      .default(1),
     pageSize: z.coerce
       .number()
       .int()

@@ -22,7 +22,9 @@ export default function RecurringTransactionForm({
   const [description, setDescription] = useState(initialValues?.description ?? "");
   const [dayOfMonth, setDayOfMonth] = useState(initialValues?.dayOfMonth ?? "");
   const [startDate, setStartDate] = useState(toDateInputValue(initialValues?.startDate));
-  const [endDate, setEndDate] = useState(initialValues?.endDate ? initialValues.endDate.slice(0, 10) : "");
+  const [endDate, setEndDate] = useState(
+    initialValues?.endDate ? initialValues.endDate.slice(0, 10) : ""
+  );
   const [active, setActive] = useState(initialValues?.active ?? true);
 
   function handleSubmit(event) {

@@ -20,7 +20,17 @@ Os arquivos de teste rodam com `fileParallelism: false` (ver `backend/vitest.con
 
 Particularidades do E2E (número de workers, estratégia de dados): ver `e2e/README.md`.
 
-CI (GitHub Actions, `.github/workflows/`) roda os testes de backend e o E2E em todo PR/push para `main`.
+### Formatação
+
+```bash
+npm install                   # na raiz: tooling do monorepo (Prettier), não é usado pelos deploys
+npm run format                # formata todo JS/JSX
+npm run format:check          # o que o CI roda
+```
+
+Config em `.prettierrc.json` (só o que difere do padrão do Prettier). Não formatar à mão nem discutir estilo mecânico em revisão — o Prettier decide. Markdown/YAML ficam fora do Prettier de propósito.
+
+CI (GitHub Actions, `.github/workflows/`) roda a checagem de formatação, os testes de backend e o E2E em todo PR/push para `main`.
 
 ## Arquitetura do backend
 

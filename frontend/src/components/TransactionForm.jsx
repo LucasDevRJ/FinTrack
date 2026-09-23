@@ -9,7 +9,13 @@ function toDateInputValue(isoDate) {
   return isoDate ? isoDate.slice(0, 10) : new Date().toISOString().slice(0, 10);
 }
 
-export default function TransactionForm({ initialValues, onSubmit, onCancel, isSubmitting, error }) {
+export default function TransactionForm({
+  initialValues,
+  onSubmit,
+  onCancel,
+  isSubmitting,
+  error,
+}) {
   const [type, setType] = useState(initialValues?.type ?? "EXPENSE");
   const [amount, setAmount] = useState(initialValues?.amount ?? "");
   const [category, setCategory] = useState(initialValues?.category ?? "");
@@ -31,7 +37,10 @@ export default function TransactionForm({ initialValues, onSubmit, onCancel, isS
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label htmlFor="type" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label
+            htmlFor="type"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
             Tipo
           </label>
           <select
@@ -49,7 +58,10 @@ export default function TransactionForm({ initialValues, onSubmit, onCancel, isS
         </div>
 
         <div>
-          <label htmlFor="amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label
+            htmlFor="amount"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
             Valor
           </label>
           <input
@@ -65,7 +77,10 @@ export default function TransactionForm({ initialValues, onSubmit, onCancel, isS
         </div>
 
         <div>
-          <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label
+            htmlFor="category"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
             Categoria
           </label>
           <input
@@ -80,7 +95,10 @@ export default function TransactionForm({ initialValues, onSubmit, onCancel, isS
         </div>
 
         <div>
-          <label htmlFor="date" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label
+            htmlFor="date"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
             Data
           </label>
           <input

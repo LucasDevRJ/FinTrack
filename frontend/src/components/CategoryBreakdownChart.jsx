@@ -1,4 +1,13 @@
-import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { useTheme } from "../context/ThemeContext.jsx";
 import { formatCurrency } from "../utils/currency.js";
 import { EXPENSE_COLOR, EXPENSE_COLOR_DARK } from "../utils/transactionColors.js";

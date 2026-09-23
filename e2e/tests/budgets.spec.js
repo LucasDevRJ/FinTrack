@@ -31,7 +31,9 @@ test.describe("Metas de orçamento", () => {
     await expect(card).toContainText("800,00");
   });
 
-  test("categoria duplicada (case-insensitive) é rejeitada com mensagem específica", async ({ page }) => {
+  test("categoria duplicada (case-insensitive) é rejeitada com mensagem específica", async ({
+    page,
+  }) => {
     await createGoal(page, "Saúde", "300");
     await expect(getGoalCard(page, "Saúde")).toBeVisible();
 

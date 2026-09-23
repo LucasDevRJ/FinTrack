@@ -17,6 +17,8 @@ git status --short                 # nada pendente que pertença a esta issue
 git log main..HEAD --oneline       # os commits incrementais estão aqui
 ```
 
+Sempre, na raiz: `npm run format:check` (se falhar, `npm run format` e commit `style: ...`).
+
 Rode os testes do que foi tocado:
 
 - `backend/` mudou → `cd backend && npm test`
@@ -50,7 +52,7 @@ Mostre o link do PR ao usuário.
 gh pr checks <número> --watch
 ```
 
-Workflows: `Backend unit & integration tests` e `E2E` (`.github/workflows/`). Se um falhar:
+Workflows: `Format`, `Backend unit & integration tests` e `E2E` (`.github/workflows/`). Se um falhar:
 
 ```bash
 gh run list --branch <branch> --limit 3

@@ -116,8 +116,8 @@ export default function BudgetsPage() {
 
         {goals && goals.length === 0 && (
           <p className="text-gray-500 dark:text-gray-400">
-            Nenhuma meta cadastrada ainda. Defina um limite mensal por categoria para
-            acompanhar seus gastos.
+            Nenhuma meta cadastrada ainda. Defina um limite mensal por categoria para acompanhar
+            seus gastos.
           </p>
         )}
 

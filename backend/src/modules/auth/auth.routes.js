@@ -28,25 +28,20 @@ router.post(
   "/forgot-password",
   authLimiter,
   validate(forgotPasswordSchema),
-  authController.forgotPassword,
+  authController.forgotPassword
 );
 router.post(
   "/reset-password",
   authLimiter,
   validate(resetPasswordSchema),
-  authController.resetPassword,
+  authController.resetPassword
 );
-router.post(
-  "/verify-email",
-  authLimiter,
-  validate(verifyEmailSchema),
-  authController.verifyEmail,
-);
+router.post("/verify-email", authLimiter, validate(verifyEmailSchema), authController.verifyEmail);
 router.post(
   "/resend-verification",
   authLimiter,
   validate(resendVerificationSchema),
-  authController.resendVerification,
+  authController.resendVerification
 );
 router.patch("/me", protect, validate(updateNameSchema), authController.updateName);
 router.post(
@@ -54,20 +49,20 @@ router.post(
   protect,
   authLimiter,
   validate(changeEmailSchema),
-  authController.requestEmailChange,
+  authController.requestEmailChange
 );
 router.post(
   "/confirm-email-change",
   authLimiter,
   validate(confirmEmailChangeSchema),
-  authController.confirmEmailChange,
+  authController.confirmEmailChange
 );
 router.post(
   "/me/password",
   protect,
   authLimiter,
   validate(changePasswordSchema),
-  authController.changePassword,
+  authController.changePassword
 );
 
 export default router;
