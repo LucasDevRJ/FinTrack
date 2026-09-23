@@ -52,6 +52,19 @@ describe("POST /api/transactions/import", () => {
     expect(stored.map((t) => Number(t.amount)).sort((a, b) => a - b)).toEqual([150.5, 1234]);
   });
 
+  it("reports an invalid date row in Portuguese", async () => {
+    const { token } = await createAuthenticatedUser();
+
+    const csv = toCsv(HEADERS, [["not-a-date", "Despesa", "Lazer", "", "20,00"]]);
+    const res = await request(app)
+      .post("/api/transactions/import")
+      .set(authHeader(token))
+      .send({ csv });
+
+    expect(res.status).toBe(200);
+    expect(res.body.errors).toEqual([{ line: 2, message: "Data inválida" }]);
+  });
+
   it("scopes imported rows to the uploading user", async () => {
     const alice = await createAuthenticatedUser({ email: "alice-import@example.com" });
     const bob = await createAuthenticatedUser({ email: "bob-import@example.com" });
