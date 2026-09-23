@@ -7,7 +7,10 @@ export const moneyAmountSchema = z.coerce
   .number({ invalid_type_error: "Valor deve ser numérico" })
   .positive("Valor deve ser maior que zero")
   .max(999_999_999.99, "Valor muito alto")
-  .refine((value) => Number.isInteger(value * 100), {
+  // Not `Number.isInteger(value * 100)`: in floating point 77.9 * 100 is
+  // 7790.000000000001, which rejected ~9% of valid amounts (#97). Rounding to
+  // cents and comparing asks the real question: is it already a whole cent?
+  .refine((value) => Number(value.toFixed(2)) === value, {
     message: "Valor deve ter no máximo 2 casas decimais",
   });
 
