@@ -1,11 +1,17 @@
 ---
 name: review-fintrack
-description: 'Revisa as mudanças da branch atual contra os padrões específicos do FinTrack — arquitetura (ownership 404, camadas, datas UTC, ordem de rotas), convenções do CLAUDE.md (idioma por camada, comentários, nomes), testes e doc viva — e aponta achados por severidade com arquivo:linha. Use antes de abrir um PR (a skill ship-pr chama esta), ou quando o usuário pedir "revisa", "faz um review", "confere se está no padrão", "tem algo fora do padrão?", "review do PR #N". Complementa a code-review embutida (bugs genéricos), não a substitui.'
+description: 'Revisa as mudanças da branch atual contra os padrões específicos do FinTrack — arquitetura (ownership 404, camadas, datas UTC, ordem de rotas), convenções do CLAUDE.md (idioma por camada, comentários, nomes), testes e doc viva — e aponta achados por severidade com arquivo:linha. Use antes de abrir um PR (a skill ship-pr chama esta), ou quando o usuário pedir "revisa", "faz um review", "confere se está no padrão", "tem algo fora do padrão?", "review do PR #N". Complementa a code-review embutida (bugs genéricos), não a substitui. Argumento: só o número da issue ou do PR, nunca a explicação de quem escreveu o código.'
+context: fork
+agent: fintrack-reviewer
 ---
 
 # review-fintrack
 
 Revisão em duas metades, pelo mesmo critério do resto do repo: **o que uma máquina consegue checar vai para o script; o que exige julgamento fica com você.** Prettier/oxlint já rodam no CI e não entram aqui.
+
+**Roda isolada** (`context: fork` → subagent `fintrack-reviewer`, sem `Edit`/`Write`): o revisor não vê a conversa de quem escreveu o código, só este roteiro e o argumento. É de propósito: quem escreveu lê o diff com a própria intenção na cabeça (viés de autor, #106). Por isso o argumento é só o número, nunca um resumo do que foi feito.
+
+Argumento recebido: `$ARGUMENTS` (vazio = a issue da branch atual).
 
 As regras moram em `CLAUDE.md` (seção "Convenções de código"), `backend/CLAUDE.md`, `frontend/CLAUDE.md` e `AGENTS.md`. Esta skill não repete o conteúdo delas: diz **o que conferir** e **onde** está a regra.
 
@@ -17,7 +23,7 @@ git log main..HEAD --oneline
 git diff --merge-base main --stat
 ```
 
-Descubra a issue pelo nome da branch (`<tipo>/<n>-...`) e leia o critério de pronto com `gh issue view <n>`. Revisão de um PR alheio: `gh pr checkout <N>` antes.
+Descubra a issue pelo argumento ou pelo nome da branch (`<tipo>/<n>-...`) e leia o critério de pronto com `gh issue view <n>`. Argumento é um PR: `gh pr view <N>` mostra a branch e a issue (`Closes #n`). Se a branch atual não for a do PR, pare e diga que o agente principal precisa rodar `gh pr checkout <N>` antes: o revisor não troca de branch.
 
 ## 2. Metade mecânica (script)
 
@@ -25,7 +31,7 @@ Descubra a issue pelo nome da branch (`<tipo>/<n>-...`) e leia o critério de pr
 node .claude/skills/review-fintrack/check.mjs          # base padrão: main
 ```
 
-Olha só as **linhas adicionadas** desde a base, incluindo arquivos não commitados, e sai com código 1 se houver `erro`. Cada achado é uma **pista, não um veredito**: abra a linha e confirme. Se for falso positivo recorrente, corrija o script no mesmo PR (e rode de novo os dois testes descritos no fim desta skill).
+Olha só as **linhas adicionadas** desde a base, incluindo arquivos não commitados, e sai com código 1 se houver `erro`. Cada achado é uma **pista, não um veredito**: abra a linha e confirme. Falso positivo recorrente → aponte no relatório como sugestão de ajustar o script; quem ajusta é o agente principal, no mesmo PR, rodando de novo os dois testes descritos no fim desta skill.
 
 ## 3. Metade de julgamento (checklist)
 
@@ -78,7 +84,7 @@ Uma linha por área do checklist sem achados (ex.: "Ownership: 3 queries novas, 
 
 - **Bloqueia:** vazamento entre usuários, erro do script confirmado, teste de ownership ausente, mensagem em inglês para o usuário, fora do escopo da issue.
 - A seção "Conferido e ok" é obrigatória. Mostra o que foi revisado, não só o que falhou. Revisão sem achado nenhum também é um resultado, e precisa dizer o que foi coberto.
-- Não corrija nada durante a revisão. Primeiro apresente o relatório, depois corrija o que o usuário aprovar, com commits novos.
+- O revisor não corrige nada: o relatório é a resposta final dele. O agente principal apresenta o relatório ao usuário e corrige o que for aprovado, com commits novos. Correção grande → rodar a revisão de novo.
 
 ## Manutenção do script
 

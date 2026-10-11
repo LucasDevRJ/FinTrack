@@ -7,7 +7,7 @@ Este arquivo orienta qualquer agente de IA (Claude Code, Codex, Cursor etc.) faz
 ### Regras essenciais (nunca quebrar)
 
 - **Todo trabalho segue o fluxo issue → branch → commits incrementais → push → PR → merge**, descrito abaixo — sem exceção, mesmo para uma mudança pequena (já confirmado com o usuário até para um ajuste de doc de uma linha).
-- **Nunca commitar/push direto em `main`.** Vercel e Railway fazem auto-deploy a cada push nela — pular a branch/PR manda código direto pra produção.
+- **Nunca commitar/push direto em `main`.** Vercel e Railway fazem auto-deploy a cada push nela — pular a branch/PR manda código direto pra produção. No Claude Code, o push é barrado pelo hook `guard-git` (ver "Onde encontrar o quê").
 - **Nunca expandir escopo por conta própria** (ex.: multiusuário/times, notificações) — confirmar com o usuário antes.
 - **Explicar brevemente (poucos bullets) antes de instalar dependência nova ou tomar decisão estrutural importante** — não seguir direto pra implementação sem isso.
 - **Nunca pular hooks/checks de CI** (`--no-verify`, force-push em `main`) para contornar um problema — investigar a causa raiz.
@@ -15,15 +15,20 @@ Este arquivo orienta qualquer agente de IA (Claude Code, Codex, Cursor etc.) faz
 ## Onde encontrar o quê
 
 - **Arquitetura, convenções de código e lista completa de comandos** (dev/test/build de cada pacote, scripts do Prisma etc.): `CLAUDE.md`, na raiz do repo. Leia antes de mexer em módulos do backend, autenticação, recorrência ou qualquer lógica de datas.
-- **Este arquivo (`AGENTS.md`)** cobre processo/workflow e o comportamento esperado do agente durante a sessão — não arquitetura.
+- **Este arquivo (`AGENTS.md`)** cobre processo/workflow e o comportamento esperado do agente durante a sessão — não arquitetura. O `CLAUDE.md` o importa com `@AGENTS.md`, porque o Claude Code só carrega o `CLAUDE.md` automaticamente: regra escrita que não está no contexto não é seguida. Outras ferramentas (Codex, Cursor) leem este arquivo direto.
 - Não duplicar conteúdo entre os dois: mudança de arquitetura/código → só `CLAUDE.md`; mudança de processo/workflow → só este arquivo.
 - **Roteiros passo a passo (Skills do Claude Code)**: `.claude/skills/<nome>/SKILL.md`, carregados sob demanda quando a tarefa bate com a `description` de cada um. `CLAUDE.md`/`AGENTS.md` dizem *o que* é regra; as skills dizem *como executar* — referenciam esses arquivos em vez de copiar deles.
   - `start-issue` — Issue com label + branch `<tipo>/<n>-<slug>` (início de todo trabalho)
   - `backend-module` — módulo/endpoint novo no backend, ponta a ponta até o wrapper do frontend
   - `e2e-spec` — spec Playwright novo seguindo os helpers e a estratégia de dados do `e2e/`
   - `fix-bug` — erro/bug: coleta → reprodução → causa raiz → teste de regressão falhando → correção provada → PR (merge com confirmação)
-  - `review-fintrack` — revisão da branch contra os padrões do repo: script mecânico (`check.mjs`) + checklist de julgamento; roda antes do PR
+  - `review-fintrack` — revisão da branch contra os padrões do repo: script mecânico (`check.mjs`) + checklist de julgamento; roda antes do PR, **isolada** no subagent `fintrack-reviewer` (ver abaixo)
   - `ship-pr` — push → PR `Closes #N` → CI verde → squash merge (com confirmação) + delete da branch
+- **Subagent revisor** (`.claude/agents/fintrack-reviewer.md`): a `review-fintrack` tem `context: fork` + `agent: fintrack-reviewer`, então roda num contexto limpo, sem a conversa de quem escreveu o código e sem `Edit`/`Write`. Recebe só o roteiro da skill e o número da issue/PR; nunca passar junto a explicação do que foi feito, que traria de volta o viés de autor. Não chamar o agente direto pelo Agent tool, pelo mesmo motivo. Limite conhecido: tem `Bash` (precisa de `git diff`, `gh`, `check.mjs`), então "não editar" é instrução, não trava. Ferramentas de skill não servem para restringir: `allowed-tools` só dispensa a confirmação; quem restringe é `tools`/`disallowedTools` do agente.
+- **Hooks do Claude Code**: registrados em `.claude/settings.json` (versionado; `settings.local.json` fica para permissões pessoais), scripts Node em `.claude/hooks/`. Diferente de `CLAUDE.md` e skills, que o modelo *escolhe* seguir, o hook é executado pelo próprio Claude Code, sempre. Critério: **regra mecânica, que deve valer em 100% dos casos → hook; regra que exige julgamento → `CLAUDE.md`/`AGENTS.md`; procedimento passo a passo → skill.**
+  - `guard-git.mjs` (antes de todo comando Bash) — bloqueia push para a `main` (inclusive implícito: `git push` estando nela, `HEAD:main`, `--all`) e `--no-verify`/`commit -n`. Texto entre aspas (mensagem de commit) é ignorado.
+  - `format-edited-file.mjs` (depois de `Edit`/`Write`) — roda o Prettier no arquivo editado, mesmo escopo do `npm run format`; erro de sintaxe volta como aviso para o agente.
+  - Só valem para o Claude Code: edição manual e outros agentes seguem as regras acima por conta própria, e o CI continua sendo a rede de segurança.
 
 ## Comandos essenciais
 
@@ -62,5 +67,5 @@ O mesmo vale para as skills em `.claude/skills/`: mudou o processo (ex.: novo la
 - **Agir como parceiro de desenvolvimento, não só executor.** Propor ideias e contrapor a abordagem pedida quando houver uma melhor, explicando o porquê — em vez de aceitar todo pedido sem questionar. Isso é diferente de "explicar antes de decidir" (regra acima): aqui o ponto é desafiar ativamente o pedido do usuário quando fizer sentido, não só justificar as próprias escolhas do agente.
 - **Checkpoints são commits reais, não memória de conversa.** Em tarefas longas/multi-etapa, o histórico do Git é a fonte de verdade entre sessões — não confiar em contexto de chat (que pode ser resumido/perdido) pra lembrar o que já foi feito.
 - **Priorização de backlog:** pesar apelo de portfólio/cliente **e** valor real para o usuário final — não escolher um item só porque impressiona num freelance client.
-- **Delegação/paralelização (subagentes):** só quando a tarefa se divide em partes genuinamente independentes (ex.: pesquisar duas áreas não relacionadas do código). O fluxo linear issue→branch→commit→push→PR→merge deste repo é sequencial por natureza — executar direto, sem delegar essas etapas.
+- **Delegação/paralelização (subagentes):** só quando a tarefa se divide em partes genuinamente independentes (ex.: pesquisar duas áreas não relacionadas do código). O fluxo linear issue→branch→commit→push→PR→merge deste repo é sequencial por natureza — executar direto, sem delegar essas etapas. A exceção é a revisão (`review-fintrack` → `fintrack-reviewer`): ali o isolamento é o objetivo, porque revisar no mesmo contexto que escreveu o código traz o viés de autor.
 - **Falha de CI ou conflito de merge:** investigar a causa raiz antes de contornar; nunca pular verificação para "fazer passar".
