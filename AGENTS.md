@@ -15,7 +15,7 @@ Este arquivo orienta qualquer agente de IA (Claude Code, Codex, Cursor etc.) faz
 ## Onde encontrar o quê
 
 - **Arquitetura, convenções de código e lista completa de comandos** (dev/test/build de cada pacote, scripts do Prisma etc.): `CLAUDE.md`, na raiz do repo. Leia antes de mexer em módulos do backend, autenticação, recorrência ou qualquer lógica de datas.
-- **Este arquivo (`AGENTS.md`)** cobre processo/workflow e o comportamento esperado do agente durante a sessão — não arquitetura.
+- **Este arquivo (`AGENTS.md`)** cobre processo/workflow e o comportamento esperado do agente durante a sessão — não arquitetura. O `CLAUDE.md` o importa com `@AGENTS.md`, porque o Claude Code só carrega o `CLAUDE.md` automaticamente: regra escrita que não está no contexto não é seguida. Outras ferramentas (Codex, Cursor) leem este arquivo direto.
 - Não duplicar conteúdo entre os dois: mudança de arquitetura/código → só `CLAUDE.md`; mudança de processo/workflow → só este arquivo.
 - **Roteiros passo a passo (Skills do Claude Code)**: `.claude/skills/<nome>/SKILL.md`, carregados sob demanda quando a tarefa bate com a `description` de cada um. `CLAUDE.md`/`AGENTS.md` dizem *o que* é regra; as skills dizem *como executar* — referenciam esses arquivos em vez de copiar deles.
   - `start-issue` — Issue com label + branch `<tipo>/<n>-<slug>` (início de todo trabalho)

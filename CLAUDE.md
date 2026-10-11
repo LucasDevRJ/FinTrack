@@ -78,4 +78,6 @@ Ver `frontend/CLAUDE.md`.
 
 ## Convenções de workflow
 
-Ver `AGENTS.md`.
+Importado abaixo para entrar no contexto de toda sessão: o Claude Code só carrega o `CLAUDE.md` sozinho, e as regras de processo não podem depender de o agente decidir abrir outro arquivo (#104).
+
+@AGENTS.md
