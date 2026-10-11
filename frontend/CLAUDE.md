@@ -41,6 +41,7 @@ Referência: `BudgetGoalForm.jsx`. O componente de formulário é controlado (`u
 - **Moldura das páginas**: autenticadas usam `<main className="min-h-screen bg-gray-50 p-4 sm:p-8 dark:bg-gray-900">` + `mx-auto max-w-4xl`, com cards `rounded-lg bg-white p-5 shadow dark:bg-gray-800`; páginas públicas de formulário (login, cadastro, redefinição) centralizam um único card `p-8` com `flex items-center justify-center`. A `LandingPage` tem layout próprio de marketing. Ação principal: `bg-indigo-600 ... hover:bg-indigo-700`.
 - **Mobile primeiro**: layout base para celular e `sm:`/`md:` para ampliar (grids de formulário `grid-cols-1 sm:grid-cols-2`, navegação do `Header` vira menu abaixo de `md`).
 - **Dinheiro sempre via `formatCurrency`**; cores de receita/despesa e status de meta vêm das constantes em `src/utils/`, não de hex solto no componente.
+- **Eixos de gráfico (Recharts)**: o `interval` padrão do `XAxis` descarta rótulos que acha que vão se sobrepor, **em silêncio**, e sobra barra sem nome (#100). Eixo de categorias discretas (meses) usa `interval={0}` com um rótulo curto que caiba em **360px** (largura de Android mais comum no Brasil), como o `axisMonthLabel` do `MonthlyBarChart` (ano só em janeiro e no primeiro mês, salvo se este for dezembro); o formato longo fica no tooltip. `interval={0}` força todo rótulo a aparecer mesmo sem espaço, então contar rótulos não basta: o E2E mede a sobreposição pelas caixas dos textos (`e2e/tests/dashboard.spec.js`).
 
 ## Datas
 
