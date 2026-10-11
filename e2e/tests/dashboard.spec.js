@@ -32,13 +32,36 @@ test.describe("Dashboard", () => {
     await expect(monthAxisLabels(page)).toHaveCount(6);
   });
 
+  // 360px is the most common Android width in Brazil; at 390px the labels
+  // fitted but at 360px they already touched each other.
   test.describe("no celular", () => {
-    test.use({ viewport: { width: 390, height: 844 } });
+    test.use({ viewport: { width: 360, height: 800 } });
 
     test("o gráfico de 6 meses mostra o nome de todos os meses", async ({ page }) => {
       await page.goto("/dashboard");
 
       await expect(monthAxisLabels(page)).toHaveCount(6);
+    });
+
+    // Counting labels can't see them colliding: interval={0} forces every
+    // label to render even when there's no room for it.
+    test("os nomes dos meses não se sobrepõem", async ({ page }) => {
+      await page.goto("/dashboard");
+      const labels = monthAxisLabels(page);
+      await expect(labels).toHaveCount(6);
+
+      const boxes = await labels.evaluateAll((nodes) =>
+        nodes.map((node) => {
+          const { left, right } = node.getBoundingClientRect();
+          return { text: node.textContent, left, right };
+        })
+      );
+      const overlapping = boxes
+        .slice(1)
+        .filter((box, i) => box.left < boxes[i].right)
+        .map((box, i) => `${boxes[i].text} × ${box.text}`);
+
+      expect(overlapping).toEqual([]);
     });
   });
 });
