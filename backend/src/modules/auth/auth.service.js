@@ -27,15 +27,13 @@ function hashToken(token) {
   return crypto.createHash("sha256").update(token).digest("hex");
 }
 
-// Clears a single-use token and applies `data` only if the token is still on
-// the row (compare-and-set in one UPDATE). Checking with findFirst and then
-// clearing with update let two concurrent requests both pass the check (#111);
-// Postgres re-evaluates this WHERE after the row lock, so only one wins.
-async function consumeSingleUseToken(userId, tokenField, tokenHash, data) {
-  const { count } = await prisma.user.updateMany({
-    where: { id: userId, [tokenField]: tokenHash },
-    data,
-  });
+// Applies `data` (which clears the token) only if the token is still on the
+// row and unexpired — compare-and-set in one UPDATE. Checking with findFirst
+// and then clearing with update let two concurrent requests both pass the
+// check (#111); Postgres re-evaluates this WHERE after the row lock, so only
+// one wins.
+async function consumeSingleUseToken(userId, tokenWhere, data) {
+  const { count } = await prisma.user.updateMany({ where: { id: userId, ...tokenWhere }, data });
   return count === 1;
 }
 
@@ -123,20 +121,18 @@ export async function loginUser({ email, password }) {
 }
 
 export async function verifyEmail(token) {
-  const tokenHash = hashToken(token);
-  const user = await prisma.user.findFirst({
-    where: {
-      emailVerificationTokenHash: tokenHash,
-      emailVerificationExpiresAt: { gt: new Date() },
-    },
+  const tokenWhere = {
+    emailVerificationTokenHash: hashToken(token),
+    emailVerificationExpiresAt: { gt: new Date() },
+  };
+  const user = await prisma.user.findFirst({ where: tokenWhere });
+  if (!user) throw new AppError("Link de verificação inválido ou expirado", 400);
+
+  const consumed = await consumeSingleUseToken(user.id, tokenWhere, {
+    emailVerifiedAt: new Date(),
+    emailVerificationTokenHash: null,
+    emailVerificationExpiresAt: null,
   });
-  const consumed =
-    user &&
-    (await consumeSingleUseToken(user.id, "emailVerificationTokenHash", tokenHash, {
-      emailVerifiedAt: new Date(),
-      emailVerificationTokenHash: null,
-      emailVerificationExpiresAt: null,
-    }));
   if (!consumed) throw new AppError("Link de verificação inválido ou expirado", 400);
 
   const verifiedUser = await prisma.user.findUnique({ where: { id: user.id } });
@@ -247,13 +243,11 @@ export async function requestEmailChange(id, newEmail) {
 }
 
 export async function confirmEmailChange(token) {
-  const tokenHash = hashToken(token);
-  const user = await prisma.user.findFirst({
-    where: {
-      pendingEmailTokenHash: tokenHash,
-      pendingEmailExpiresAt: { gt: new Date() },
-    },
-  });
+  const tokenWhere = {
+    pendingEmailTokenHash: hashToken(token),
+    pendingEmailExpiresAt: { gt: new Date() },
+  };
+  const user = await prisma.user.findFirst({ where: tokenWhere });
   if (!user) throw new AppError("Link inválido ou expirado", 400);
 
   // Re-check availability at confirmation time, not just at request time —
@@ -263,7 +257,7 @@ export async function confirmEmailChange(token) {
     throw new AppError("Este e-mail já está em uso", 409);
   }
 
-  const consumed = await consumeSingleUseToken(user.id, "pendingEmailTokenHash", tokenHash, {
+  const consumed = await consumeSingleUseToken(user.id, tokenWhere, {
     email: user.pendingEmail,
     pendingEmail: null,
     pendingEmailTokenHash: null,
@@ -517,17 +511,15 @@ export async function requestPasswordReset(email) {
 }
 
 export async function resetPassword(token, newPassword) {
-  const tokenHash = hashToken(token);
-  const user = await prisma.user.findFirst({
-    where: {
-      resetPasswordTokenHash: tokenHash,
-      resetPasswordExpiresAt: { gt: new Date() },
-    },
-  });
+  const tokenWhere = {
+    resetPasswordTokenHash: hashToken(token),
+    resetPasswordExpiresAt: { gt: new Date() },
+  };
+  const user = await prisma.user.findFirst({ where: tokenWhere });
   if (!user) throw new AppError("Link inválido ou expirado", 400);
 
   const hashedPassword = await bcrypt.hash(newPassword, SALT_ROUNDS);
-  const consumed = await consumeSingleUseToken(user.id, "resetPasswordTokenHash", tokenHash, {
+  const consumed = await consumeSingleUseToken(user.id, tokenWhere, {
     password: hashedPassword,
     resetPasswordTokenHash: null,
     resetPasswordExpiresAt: null,
