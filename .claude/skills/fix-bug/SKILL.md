@@ -92,7 +92,7 @@ Pergunte: "o que teria impedido este bug de entrar?"
 
 ## 9. Revisão, PR e merge
 
-1. Skill `review-fintrack`: resolva os achados que bloqueiam o merge.
+1. Skill `review-fintrack` com **só o número da issue** como argumento (roda isolada, sem a sua explicação da correção): resolva os achados que bloqueiam o merge.
 2. Skill `ship-pr`: o PR leva **Sintoma → Causa raiz → Correção → Prova** (o teste falhando no commit `test:` e passando no `fix:`, mais a reprodução original).
 3. **Merge só depois de perguntar ao usuário.** Um bugfix muda comportamento em produção, e é justamente aí que uma confirmação a mais importa.
 
