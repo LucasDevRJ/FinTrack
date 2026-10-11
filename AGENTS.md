@@ -7,7 +7,7 @@ Este arquivo orienta qualquer agente de IA (Claude Code, Codex, Cursor etc.) faz
 ### Regras essenciais (nunca quebrar)
 
 - **Todo trabalho segue o fluxo issue → branch → commits incrementais → push → PR → merge**, descrito abaixo — sem exceção, mesmo para uma mudança pequena (já confirmado com o usuário até para um ajuste de doc de uma linha).
-- **Nunca commitar/push direto em `main`.** Vercel e Railway fazem auto-deploy a cada push nela — pular a branch/PR manda código direto pra produção.
+- **Nunca commitar/push direto em `main`.** Vercel e Railway fazem auto-deploy a cada push nela — pular a branch/PR manda código direto pra produção. No Claude Code, o push é barrado pelo hook `guard-git` (ver "Onde encontrar o quê").
 - **Nunca expandir escopo por conta própria** (ex.: multiusuário/times, notificações) — confirmar com o usuário antes.
 - **Explicar brevemente (poucos bullets) antes de instalar dependência nova ou tomar decisão estrutural importante** — não seguir direto pra implementação sem isso.
 - **Nunca pular hooks/checks de CI** (`--no-verify`, force-push em `main`) para contornar um problema — investigar a causa raiz.
@@ -24,6 +24,10 @@ Este arquivo orienta qualquer agente de IA (Claude Code, Codex, Cursor etc.) faz
   - `fix-bug` — erro/bug: coleta → reprodução → causa raiz → teste de regressão falhando → correção provada → PR (merge com confirmação)
   - `review-fintrack` — revisão da branch contra os padrões do repo: script mecânico (`check.mjs`) + checklist de julgamento; roda antes do PR
   - `ship-pr` — push → PR `Closes #N` → CI verde → squash merge (com confirmação) + delete da branch
+- **Hooks do Claude Code**: registrados em `.claude/settings.json` (versionado; `settings.local.json` fica para permissões pessoais), scripts Node em `.claude/hooks/`. Diferente de `CLAUDE.md` e skills, que o modelo *escolhe* seguir, o hook é executado pelo próprio Claude Code, sempre. Critério: **regra mecânica, que deve valer em 100% dos casos → hook; regra que exige julgamento → `CLAUDE.md`/`AGENTS.md`; procedimento passo a passo → skill.**
+  - `guard-git.mjs` (antes de todo comando Bash) — bloqueia push para a `main` (inclusive implícito: `git push` estando nela, `HEAD:main`, `--all`) e `--no-verify`/`commit -n`. Texto entre aspas (mensagem de commit) é ignorado.
+  - `format-edited-file.mjs` (depois de `Edit`/`Write`) — roda o Prettier no arquivo editado, mesmo escopo do `npm run format`; erro de sintaxe volta como aviso para o agente.
+  - Só valem para o Claude Code: edição manual e outros agentes seguem as regras acima por conta própria, e o CI continua sendo a rede de segurança.
 
 ## Comandos essenciais
 
