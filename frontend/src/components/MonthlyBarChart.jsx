@@ -36,16 +36,18 @@ function monthLabel(monthKey) {
     .replace(".", "");
 }
 
-// Compact axis label ("ago/26"): the long form ("ago de 26") didn't fit six
-// of them in half a desktop card or on a phone, and Recharts' default tick
-// interval then silently dropped some months (#100). The tooltip keeps the
-// long form, which has room for it.
-function shortMonthLabel(monthKey) {
+// Compact axis label: the year only on the first month and on January
+// ("mai/26 jun jul … dez jan/27"). The long form ("ago de 26") didn't fit six
+// of them in half a desktop card, and Recharts' default tick interval then
+// silently dropped some months; "ago/26" on every tick still collided at
+// 360px, the most common Android width in Brazil (#100). The tooltip keeps
+// the long form, which has room for it.
+function axisMonthLabel(monthKey, index) {
   const [year, month] = monthKey.split("-").map(Number);
   const name = new Intl.DateTimeFormat("pt-BR", { month: "short" })
     .format(new Date(year, month - 1, 1))
     .replace(".", "");
-  return `${name}/${String(year).slice(-2)}`;
+  return index === 0 || month === 1 ? `${name}/${String(year).slice(-2)}` : name;
 }
 
 function CustomTooltip({ active, payload, label }) {
@@ -82,8 +84,8 @@ export default function MonthlyBarChart({ data }) {
         <CartesianGrid vertical={false} stroke={isDark ? GRIDLINE_COLOR_DARK : GRIDLINE_COLOR} />
         <XAxis
           dataKey="month"
-          tickFormatter={shortMonthLabel}
-          // Every month always gets a label — see shortMonthLabel.
+          tickFormatter={axisMonthLabel}
+          // Every month always gets a label — see axisMonthLabel.
           interval={0}
           tick={{ fill: MUTED_TEXT, fontSize: 12 }}
           axisLine={{ stroke: isDark ? AXIS_COLOR_DARK : AXIS_COLOR }}
