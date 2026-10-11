@@ -88,6 +88,10 @@ test.describe("Dashboard", () => {
       await expect(labels).toHaveCount(6);
 
       expect(await overlappingLabels(labels)).toEqual([]);
+      // React's dev StrictMode fetches the summary twice; without this the
+      // second route.fetch is still in flight when the test ends and logs
+      // "route.fetch: Test ended".
+      await page.unrouteAll({ behavior: "ignoreErrors" });
     });
   });
 });
