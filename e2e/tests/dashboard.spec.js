@@ -54,6 +54,13 @@ test.describe("Dashboard", () => {
   test.describe("no celular", () => {
     test.use({ viewport: { width: 360, height: 800 } });
 
+    // React's dev StrictMode fetches the summary twice, so a route.fetch can
+    // still be in flight when a test ends ("route.fetch: Test ended"). In
+    // afterEach it also runs when an assertion fails.
+    test.afterEach(async ({ page }) => {
+      await page.unrouteAll({ behavior: "ignoreErrors" });
+    });
+
     test("o gráfico de 6 meses mostra o nome de todos os meses", async ({ page }) => {
       await page.goto("/dashboard");
 

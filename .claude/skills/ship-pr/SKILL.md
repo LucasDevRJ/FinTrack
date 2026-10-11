@@ -25,7 +25,7 @@ Rode os testes do que foi tocado:
 
 - `backend/` mudou → `cd backend && npm test`
 - `frontend/` mudou → `cd frontend && npm run build`
-- UI ou fluxo ponta a ponta mudou → `cd e2e && npm test` (precisa de backend + frontend rodando; ver `e2e/README.md`)
+- UI ou fluxo ponta a ponta mudou → `cd e2e && npm test` com **nenhum servidor no ar**: o Playwright sobe os dois (backend com `NODE_ENV=test`) e derruba no fim. Servidor já rodando precisa ter sido subido com `NODE_ENV=test`, senão todo cadastro dá 500; ver `e2e/README.md`
 - Só docs/config → nada a rodar, mas diga isso explicitamente no plano de testes
 
 Teste falhando → corrija a causa. Nunca `--no-verify`, nunca `.skip` para "fazer passar".
