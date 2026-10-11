@@ -36,18 +36,20 @@ function monthLabel(monthKey) {
     .replace(".", "");
 }
 
-// Compact axis label: the year only on the first month and on January
-// ("mai/26 jun jul … dez jan/27"). The long form ("ago de 26") didn't fit six
-// of them in half a desktop card, and Recharts' default tick interval then
-// silently dropped some months; "ago/26" on every tick still collided at
-// 360px, the most common Android width in Brazil (#100). The tooltip keeps
-// the long form, which has room for it.
+// Compact axis label: the year only on January and on the first month
+// ("mai/26 jun jul … dez jan/27"), except a first December, whose neighbour
+// "jan/AA" already places it ("dez jan/27 fev …": two years side by side
+// collided). The long form ("ago de 26") didn't fit six of them in half a
+// desktop card, and Recharts' default tick interval then silently dropped
+// some months; "ago/26" on every tick still collided at 360px, the most
+// common Android width in Brazil (#100). The tooltip keeps the long form.
 function axisMonthLabel(monthKey, index) {
   const [year, month] = monthKey.split("-").map(Number);
   const name = new Intl.DateTimeFormat("pt-BR", { month: "short" })
     .format(new Date(year, month - 1, 1))
     .replace(".", "");
-  return index === 0 || month === 1 ? `${name}/${String(year).slice(-2)}` : name;
+  const showYear = month === 1 || (index === 0 && month !== 12);
+  return showYear ? `${name}/${String(year).slice(-2)}` : name;
 }
 
 function CustomTooltip({ active, payload, label }) {
