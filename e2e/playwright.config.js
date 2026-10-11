@@ -30,10 +30,10 @@ export default defineConfig({
     },
   ],
 
-  // Assumes `npm run dev` is already running for both backend and frontend
-  // (matches how Lucas normally develops locally) — reuseExistingServer
-  // here means Playwright checks the URL and only spawns its own copy if
-  // nothing answers, instead of always trying to start a second instance.
+  // Playwright starts both servers itself (backend with NODE_ENV=test) and
+  // stops them at the end — the recommended way to run (e2e/README.md).
+  // reuseExistingServer reuses whatever already answers on these URLs, so a
+  // backend started by hand without NODE_ENV=test makes every signup fail.
   webServer: [
     {
       command: "npm run dev",
@@ -43,7 +43,8 @@ export default defineConfig({
       timeout: 30_000,
       // Skips the Resend call on register (mailer.js; it only delivers to the
       // account owner, so every test signup 500s) and the auth rate limiter
-      // (every test user registers from the same IP). Same as the CI workflow.
+      // (it counts failed attempts per IP, and the suite fails logins on
+      // purpose). Same as the CI workflow.
       // Does not switch databases: server.js only loads backend/.env.
       env: { NODE_ENV: "test" },
     },

@@ -17,7 +17,7 @@ Se preferir subir na mão (para ver os logs), o backend **precisa** de
 
 ```
 cd backend && NODE_ENV=test npm run dev                  # Git Bash
-cd backend; $env:NODE_ENV="test"; npm run dev            # PowerShell
+cd backend; $env:NODE_ENV="test"; npm run dev            # PowerShell (vale até fechar o terminal)
 cd frontend && npm run dev
 ```
 
@@ -25,7 +25,9 @@ Por quê: com `NODE_ENV=test` o backend **não envia e-mail** pelo Resend
 (`backend/src/utils/mailer.js`) e **desliga o limitador de tentativas de
 login** (`backend/src/middleware/rateLimit.js`). Sem isso, todo cadastro de
 usuário de teste falha com 500 ("You can only send testing emails to your own
-email address"), e com muitos cadastros do mesmo IP o limitador também barra.
+email address"). E o limitador conta as tentativas que **falham** por IP: a
+suíte erra logins de propósito ("senha errada", "antes de confirmar o
+e-mail"), então algumas rodadas seguidas estouram o limite.
 O banco **não muda**: o `server.js` só carrega o `backend/.env` (o
 `.env.test` é só do Vitest). O CI usa a mesma variável (`.github/workflows/e2e.yml`).
 
