@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { useAuth } from "../context/AuthContext.jsx";
 import { getErrorMessage } from "../utils/apiError.js";
@@ -15,12 +15,22 @@ export default function VerifyEmailPage() {
   const navigate = useNavigate();
   const [status, setStatus] = useState(token ? "verifying" : "missing-token");
   const [error, setError] = useState("");
+  const request = useRef(null);
 
   useEffect(() => {
     if (!token) return;
 
+    // The token is single-use, so the request starts once per token and every
+    // effect run waits on that same promise. React's dev StrictMode runs this
+    // effect twice (refs survive its remount): calling the API again sent the
+    // token twice, and the page showed the second, losing answer — "inválido
+    // ou expirado" (#111). `cancelled` only silences an unmounted run.
+    if (request.current?.token !== token) {
+      request.current = { token, promise: verifyEmail(token) };
+    }
+
     let cancelled = false;
-    verifyEmail(token)
+    request.current.promise
       .then(() => {
         if (cancelled) return;
         navigate("/dashboard", { replace: true });

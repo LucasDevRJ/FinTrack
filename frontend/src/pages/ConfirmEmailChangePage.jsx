@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { useAuth } from "../context/AuthContext.jsx";
 import { getErrorMessage } from "../utils/apiError.js";
@@ -15,12 +15,19 @@ export default function ConfirmEmailChangePage() {
   const navigate = useNavigate();
   const [status, setStatus] = useState(token ? "confirming" : "missing-token");
   const [error, setError] = useState("");
+  const request = useRef(null);
 
   useEffect(() => {
     if (!token) return;
 
+    // Single-use token: start the request once per token, same reasoning as
+    // VerifyEmailPage (#111).
+    if (request.current?.token !== token) {
+      request.current = { token, promise: confirmEmailChange(token) };
+    }
+
     let cancelled = false;
-    confirmEmailChange(token)
+    request.current.promise
       .then(() => {
         if (cancelled) return;
         navigate("/account", { replace: true });

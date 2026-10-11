@@ -3,6 +3,7 @@
 // e-mail is confirmed, and verify-email/resend-verification behave as
 // expected. Resend itself is mocked globally (see tests/setup/mockResend.js)
 // so these never hit the real API.
+import crypto from "node:crypto";
 import request from "supertest";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import app from "../../src/app.js";
@@ -272,5 +273,61 @@ describe("POST /api/auth/me/password", () => {
       .send({ currentPassword: "wrong-password", newPassword: "newpassword456" });
 
     expect(res.status).toBe(401);
+  });
+});
+
+// The sequential reuse tests above passed while concurrent reuse was let
+// through: each flow checked the token and cleared it in two separate queries,
+// so two requests arriving together both saw it as valid (#111).
+describe("single-use tokens under concurrent requests", () => {
+  const statusesOf = (responses) => responses.map((res) => res.status).sort();
+
+  it("verify-email accepts the same token only once", async () => {
+    const registerRes = await request(app).post("/api/auth/register").send(newUser());
+    const { devVerificationToken: token } = registerRes.body;
+
+    const responses = await Promise.all([
+      request(app).post("/api/auth/verify-email").send({ token }),
+      request(app).post("/api/auth/verify-email").send({ token }),
+    ]);
+
+    expect(statusesOf(responses)).toEqual([200, 400]);
+  });
+
+  it("confirm-email-change accepts the same token only once", async () => {
+    const { token: authToken } = await createAuthenticatedUser();
+    const requestRes = await request(app)
+      .post("/api/auth/me/email")
+      .set(authHeader(authToken))
+      .send({ email: `new-${Date.now()}@example.com` });
+    const { devEmailChangeToken: token } = requestRes.body;
+
+    const responses = await Promise.all([
+      request(app).post("/api/auth/confirm-email-change").send({ token }),
+      request(app).post("/api/auth/confirm-email-change").send({ token }),
+    ]);
+
+    expect(statusesOf(responses)).toEqual([200, 400]);
+  });
+
+  it("reset-password accepts the same token only once", async () => {
+    const { user } = await createAuthenticatedUser();
+    // The reset token only ever travels by e-mail, so plant a known one the
+    // same way requestPasswordReset stores it (sha256 hex of the raw token).
+    const token = crypto.randomBytes(32).toString("hex");
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        resetPasswordTokenHash: crypto.createHash("sha256").update(token).digest("hex"),
+        resetPasswordExpiresAt: new Date(Date.now() + 60 * 60 * 1000),
+      },
+    });
+
+    const responses = await Promise.all([
+      request(app).post("/api/auth/reset-password").send({ token, password: "newpassword1" }),
+      request(app).post("/api/auth/reset-password").send({ token, password: "newpassword2" }),
+    ]);
+
+    expect(statusesOf(responses)).toEqual([200, 400]);
   });
 });

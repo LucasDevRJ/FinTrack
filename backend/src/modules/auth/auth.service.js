@@ -27,6 +27,16 @@ function hashToken(token) {
   return crypto.createHash("sha256").update(token).digest("hex");
 }
 
+// Applies `data` (which clears the token) only if the token is still on the
+// row and unexpired — compare-and-set in one UPDATE. Checking with findFirst
+// and then clearing with update let two concurrent requests both pass the
+// check (#111); Postgres re-evaluates this WHERE after the row lock, so only
+// one wins.
+async function consumeSingleUseToken(userId, tokenWhere, data) {
+  const { count } = await prisma.user.updateMany({ where: { id: userId, ...tokenWhere }, data });
+  return count === 1;
+}
+
 // Allowlist, not `const { password, ...rest }`: the User model keeps gaining
 // internal columns (token hashes, pending e-mail change), and with a denylist
 // each new one leaks into every auth response until someone notices (#90).
@@ -111,22 +121,21 @@ export async function loginUser({ email, password }) {
 }
 
 export async function verifyEmail(token) {
-  const user = await prisma.user.findFirst({
-    where: {
-      emailVerificationTokenHash: hashToken(token),
-      emailVerificationExpiresAt: { gt: new Date() },
-    },
-  });
+  const tokenWhere = {
+    emailVerificationTokenHash: hashToken(token),
+    emailVerificationExpiresAt: { gt: new Date() },
+  };
+  const user = await prisma.user.findFirst({ where: tokenWhere });
   if (!user) throw new AppError("Link de verificação inválido ou expirado", 400);
 
-  const verifiedUser = await prisma.user.update({
-    where: { id: user.id },
-    data: {
-      emailVerifiedAt: new Date(),
-      emailVerificationTokenHash: null,
-      emailVerificationExpiresAt: null,
-    },
+  const consumed = await consumeSingleUseToken(user.id, tokenWhere, {
+    emailVerifiedAt: new Date(),
+    emailVerificationTokenHash: null,
+    emailVerificationExpiresAt: null,
   });
+  if (!consumed) throw new AppError("Link de verificação inválido ou expirado", 400);
+
+  const verifiedUser = await prisma.user.findUnique({ where: { id: user.id } });
 
   // Verifying is also the moment the account becomes usable — issue a token
   // right away instead of sending the user back to fill in the login form.
@@ -234,12 +243,11 @@ export async function requestEmailChange(id, newEmail) {
 }
 
 export async function confirmEmailChange(token) {
-  const user = await prisma.user.findFirst({
-    where: {
-      pendingEmailTokenHash: hashToken(token),
-      pendingEmailExpiresAt: { gt: new Date() },
-    },
-  });
+  const tokenWhere = {
+    pendingEmailTokenHash: hashToken(token),
+    pendingEmailExpiresAt: { gt: new Date() },
+  };
+  const user = await prisma.user.findFirst({ where: tokenWhere });
   if (!user) throw new AppError("Link inválido ou expirado", 400);
 
   // Re-check availability at confirmation time, not just at request time —
@@ -249,15 +257,15 @@ export async function confirmEmailChange(token) {
     throw new AppError("Este e-mail já está em uso", 409);
   }
 
-  const updated = await prisma.user.update({
-    where: { id: user.id },
-    data: {
-      email: user.pendingEmail,
-      pendingEmail: null,
-      pendingEmailTokenHash: null,
-      pendingEmailExpiresAt: null,
-    },
+  const consumed = await consumeSingleUseToken(user.id, tokenWhere, {
+    email: user.pendingEmail,
+    pendingEmail: null,
+    pendingEmailTokenHash: null,
+    pendingEmailExpiresAt: null,
   });
+  if (!consumed) throw new AppError("Link inválido ou expirado", 400);
+
+  const updated = await prisma.user.findUnique({ where: { id: user.id } });
 
   // Same reasoning as verifyEmail: confirming is also the moment it's safe
   // to consider the user "here", so hand back a usable token right away.
@@ -503,23 +511,20 @@ export async function requestPasswordReset(email) {
 }
 
 export async function resetPassword(token, newPassword) {
-  const user = await prisma.user.findFirst({
-    where: {
-      resetPasswordTokenHash: hashToken(token),
-      resetPasswordExpiresAt: { gt: new Date() },
-    },
-  });
+  const tokenWhere = {
+    resetPasswordTokenHash: hashToken(token),
+    resetPasswordExpiresAt: { gt: new Date() },
+  };
+  const user = await prisma.user.findFirst({ where: tokenWhere });
   if (!user) throw new AppError("Link inválido ou expirado", 400);
 
   const hashedPassword = await bcrypt.hash(newPassword, SALT_ROUNDS);
-  await prisma.user.update({
-    where: { id: user.id },
-    data: {
-      password: hashedPassword,
-      resetPasswordTokenHash: null,
-      resetPasswordExpiresAt: null,
-    },
+  const consumed = await consumeSingleUseToken(user.id, tokenWhere, {
+    password: hashedPassword,
+    resetPasswordTokenHash: null,
+    resetPasswordExpiresAt: null,
   });
+  if (!consumed) throw new AppError("Link inválido ou expirado", 400);
 
   // Security notice distinct from the reset-link e-mail sent above by
   // requestPasswordReset — this one confirms the change actually happened.

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { uniqueUser } from "../helpers/testUser.js";
+import { loginAsUser, uniqueUser } from "../helpers/testUser.js";
 
 // Auth is the one area we walk through the real form UI end to end — every
 // other spec logs in via the API helper for speed and exercises this flow
@@ -44,6 +44,43 @@ test.describe("Autenticação", () => {
 
     await expect(page).toHaveURL("/dashboard");
     await expect(page.getByRole("heading", { name: `Olá, ${user.name}` })).toBeVisible();
+  });
+
+  // The token is single-use: sending it twice raced the two requests, and
+  // the page showed whichever answered last — "inválido ou expirado" when the
+  // second one lost (#111). React's dev StrictMode runs the effect twice.
+  test("abrir o link de confirmação envia o token uma única vez", async ({ page, request }) => {
+    const devVerificationToken = await registerViaApi(request, uniqueUser("verify-once"));
+    const calls = [];
+    page.on("request", (req) => {
+      if (req.method() === "POST" && req.url().endsWith("/api/auth/verify-email")) calls.push(req);
+    });
+
+    await page.goto(`/verify-email?token=${devVerificationToken}`);
+    await expect(page).toHaveURL("/dashboard");
+
+    expect(calls).toHaveLength(1);
+  });
+
+  test("abrir o link de troca de e-mail envia o token uma única vez", async ({ page, request }) => {
+    const authToken = await loginAsUser(page, request, uniqueUser("email-change-once"));
+    const response = await request.post("http://localhost:3333/api/auth/me/email", {
+      headers: { Authorization: `Bearer ${authToken}` },
+      data: { email: `${Date.now()}-novo@fintrack-e2e.test` },
+    });
+    expect(response.ok()).toBeTruthy();
+    const { devEmailChangeToken } = await response.json();
+    const calls = [];
+    page.on("request", (req) => {
+      if (req.method() === "POST" && req.url().endsWith("/api/auth/confirm-email-change")) {
+        calls.push(req);
+      }
+    });
+
+    await page.goto(`/confirm-email-change?token=${devEmailChangeToken}`);
+    await expect(page).toHaveURL("/account");
+
+    expect(calls).toHaveLength(1);
   });
 
   test("login antes de confirmar o e-mail mostra um aviso específico", async ({
